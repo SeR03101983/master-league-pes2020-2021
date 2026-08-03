@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MasterLeague">
+    <link rel="apple-touch-icon" href="icone/icona-192x192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="titolo">Lista Allenatori</title>
+    <!-- ✅ LIBRERIA CRITTOGRAFIA -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; margin: 0; padding: 0; }
+        body { background: #f0f4f8; padding: 20px; max-width: 1400px; margin: auto; }
+        h1, h2, h3 { color: #2c3e50; margin-bottom: 15px; }
+        .sezione { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input, button, select { padding: 12px; margin: 6px 0; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 15px; }
+        button { background: #2980b9; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover:not(:disabled) { background: #1a5276; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; opacity: 0.6; }
+        .barra-comandi { background: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 10px; flex-wrap: wrap; position: sticky; top:10px; z-index:100; }
+        .lista-allenatori { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card-allenatore { background: #fff; border-radius: 8px; padding: 20px; border-top: 4px solid #2980b9; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .nascosto { display: none !important; }
+        .foto-contratto { max-width: 100%; height: auto; border-radius: 8px; border: 3px solid #2980b9; margin: 15px 0; display: block; }
+        /* ✅ STILE PER ALLENATORE BLOCCATO */
+        .foto-offuscata { filter: blur(8px) grayscale(70%); pointer-events: none; }
+        .dati-nascosti { display: none !important; }
+        .info-tattica { background: #f8f9fa; border: 1px dashed #aaa; border-radius: 6px; padding: 10px; margin-top: 10px; color: #666; font-style: italic; }
+        .stato { padding: 4px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-top: 8px; }
+        .stato-disponibile { background: #e8f5e9; color: #27ae60; }
+        .stato-trattativa { background: #fff3cd; color: #d39e00; }
+        .stato-bloccato { background: #fdecea; color: #c0392b; }
+        .btn-indietro { background: #27ae60; }
+        .btn-giallo { background: #f39c12; }
+        .btn-giallo:hover { background: #d68910; }
+        .btn-rosso { background: #e74c3c; }
+        .btn-rosso:hover { background: #c0392b; }
+        .btn-ingaggiato { background: #8e44ad; }
+        .btn-ingaggiato:hover { background: #7d3c98; }
+        .info-file { font-size: 0.9em; color: #2c3e50; background: #eaf2f8; padding: 10px; border-radius: 6px; margin: 10px 0; }
+        .badge-protezione { margin-left: 8px; font-weight: bold; }
+
+        /* ✅ STILE SELETTORE LINGUA */
+        .contenitore-lingua { position: relative; display: inline-block; margin-left: auto; }
+        .btn-lingua {
+            background: #34495e; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-lingua:hover { background: #2c3e50; }
+        .menu-lingue {
+            display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 4px;
+        }
+        .menu-lingue.visibile { display: block; }
+        .voce-lingua {
+            padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;
+        }
+        .voce-lingua:hover { background: #f0f4f8; }
+        .bandiera { width: 24px; height: 16px; border-radius: 2px; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<div class="barra-comandi">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-indietro" onclick="window.location.href='master-base.html'" data-i18n="tornaHome">🏠 Torna alla Home</button>
+        <button class="btn-giallo" onclick="document.getElementById('fileInput').click()" data-i18n="caricaLista">📂 Carica Lista Allenatori</button>
+        <button class="btn-ingaggiato" onclick="window.location.href='allenatore-ingaggiato.html'" data-i18n="allenatoreIngaggiato">🏆 Allenatore Ingaggiato</button>
+        <button class="btn-rosso" onclick="eliminaListaCompleta()" data-i18n="eliminaLista">🗑️ Elimina Lista Allenatori</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none" onchange="caricaLista(event)">
+    </div>
+
+    <!-- ✅ SELETTORE LINGUA -->
+    <div class="contenitore-lingua">
+        <button class="btn-lingua" onclick="toggleMenuLingue()">
+            <span id="bandieraAttuale">🇮🇹</span>
+            <span data-i18n="scegliLingua">Scegli la lingua</span>
+        </button>
+        <div id="menuLingue" class="menu-lingue">
+            <div class="voce-lingua" onclick="cambiaLingua('it')">🇮🇹 Italiano</div>
+            <div class="voce-lingua" onclick="cambiaLingua('en')">🇬🇧 English</div>
+            <div class="voce-lingua" onclick="cambiaLingua('pt')">🇧🇷 Português</div>
+            <div class="voce-lingua" onclick="cambiaLingua('es')">🇪🇸 Español</div>
+        </div>
+    </div>
+</div>
+
+<div class="info-file">
+📄 <strong data-i18n="stato">Stato:</strong> <span id="statoPagina" data-i18n="nessunaLista">Nessuna lista caricata. Clicca "Carica Lista Allenatori" per selezionare il file.</span>
+</div>
+
+<div class="sezione">
+    <h2 data-i18n="elenco">📋 Elenco Allenatori</h2>
+    <div id="elencoAllenatori" class="lista-allenatori"></div>
+    <p id="vuoto" class="nascosto" style="text-align:center; color:#777; padding:30px;" data-i18n="nessunElemento">Nessun allenatore presente nella lista caricata</p>
+</div>
+
+<script>
+// ✅ PASSWORD MASTER
+const PASSWORD_MASTER = "LaTuaPasswordSegreta123";
+
+function crittografa(dati) {
+    return CryptoJS.AES.encrypt(JSON.stringify(dati), PASSWORD_MASTER).toString();
+}
+
+function decrittografa(stringaCritta) {
+    if (!stringaCritta || typeof stringaCritta !== 'string' || stringaCritta.trim() === '') return null;
+    try {
+        const bytes = CryptoJS.AES.decrypt(stringaCritta, PASSWORD_MASTER);
+        return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    } catch {
+        console.warn("Dati non validi o corrotti");
+        return null;
+    }
+}
+
+// ✅ DIZIONARIO MULTILINGUA
+const traduzioni = {
+    it: {
+        scegliLingua: "Scegli la lingua",
+        tornaHome: "🏠 Torna alla Home",
+        caricaLista: "📂 Carica Lista Allenatori",
+        aggiungiAllenatore: "➕ Aggiungi Allenatore",
+        allenatoreIngaggiato: "🏆 Allenatore Ingaggiato",
+        eliminaLista: "🗑️ Elimina Lista Allenatori",
+        stato: "Stato",
+        nessunaLista: "Nessuna lista caricata. Clicca 'Carica Lista Allenatori' per selezionare il file.",
+        elenco: "📋 Elenco Allenatori",
+        nessunElemento: "Nessun allenatore presente nella lista caricata",
+        senzaNome: "Senza Nome",
+        filosofia: "Filosofia",
+        ranking: "Ranking",
+        forzaMinima: "Forza Minima",
+        ambiente: "Ambiente",
+        dirigenza: "Dirigenza",
+        progetto: "Progetto",
+        bonus: "Bonus",
+        ingaggio: "Ingaggio",
+        tattica: "📋 Tattica: Visibile dopo ingaggio",
+        disponibile: "Disponibile",
+        bloccato: "Bloccato",
+        inTrattativa: "In Trattativa",
+        sblocca: "🔓 Sblocca Allenatore",
+        elimina: "🗑️ Elimina",
+        confermaElimina: "Eliminare ",
+        confermaEliminaLista: "⚠️ Sei sicuro di voler ELIMINARE TUTTA la lista e la memoria sblocchi?",
+        listaEliminata: "🗑️ Lista eliminata.",
+        listaAggiornata: "Lista aggiornata: ",
+        elementi: " elementi",
+        pwTitolo: "🔒 ALLENATORE BLOCCATO",
+        pwMessaggio: "Inserisci password per sbloccarlo PER SEMPRE:",
+        pwSuccesso: "✅ Sbloccato con successo!",
+        pwErrore: "❌ Password ERRATA!",
+        fileNonValido: "❌ File non valido o danneggiato!",
+        listaCaricata: "Lista caricata: "
+    },
+    en: {
+        scegliLingua: "Choose Language",
+        tornaHome: "🏠 Back to Home",
+        caricaLista: "📂 Load Coaches List",
+        aggiungiAllenatore: "➕ Add Coach",
+        allenatoreIngaggiato: "🏆 Hired Coach",
+        eliminaLista: "🗑️ Delete List",
+        stato: "Status",
+        nessunaLista: "No list loaded. Click 'Load Coaches List' to select file.",
+        elenco: "📋 Coaches List",
+        nessunElemento: "No coaches in the loaded list",
+        senzaNome: "No Name",
+        filosofia: "Philosophy",
+        ranking: "Ranking",
+        forzaMinima: "Min Strength",
+        ambiente: "Environment",
+        dirigenza: "Management",
+        progetto: "Project",
+        bonus: "Bonus",
+        ingaggio: "Salary",
+        tattica: "📋 Tactics: Visible after hiring",
+        disponibile: "Available",
+        bloccato: "Locked",
+        inTrattativa: "In Negotiation",
+        sblocca: "🔓 Unlock Coach",
+        elimina: "🗑️ Delete",
+        confermaElimina: "Delete ",
+        confermaEliminaLista: "⚠️ Are you sure to delete the FULL list and unlock history?",
+        listaEliminata: "🗑️ List deleted.",
+        listaAggiornata: "List updated: ",
+        elementi: " items",
+        pwTitolo: "🔒 COACH LOCKED",
+        pwMessaggio: "Enter password to unlock FOREVER:",
+        pwSuccesso: "✅ Unlocked successfully!",
+        pwErrore: "❌ WRONG Password!",
+        fileNonValido: "❌ Invalid or corrupted file!",
+        listaCaricata: "List loaded: "
+    },
+    pt: {
+        scegliLingua: "Escolher Idioma",
+        tornaHome: "🏠 Início",
+        caricaLista: "📂 Carregar Lista",
+        aggiungiAllenatore: "➕ Adicionar",
+        allenatoreIngaggiato: "🏆 Contratado",
+        eliminaLista: "🗑️ Excluir Lista",
+        stato: "Estado",
+        nessunaLista: "Sem lista. Clique 'Carregar Lista'.",
+        elenco: "📋 Lista Treinadores",
+        nessunElemento: "Nenhum treinador",
+        senzaNome: "Sem Nome",
+        filosofia: "Filosofia",
+        ranking: "Classificação",
+        forzaMinima: "Força Mín.",
+        ambiente: "Ambiente",
+        dirigenza: "Direção",
+        progetto: "Projeto",
+        bonus: "Bônus",
+        ingaggio: "Salário",
+        tattica: "📋 Tática: Visível após contratação",
+        disponibile: "Disponível",
+        bloccato: "Bloqueado",
+        inTrattativa: "Em Negociação",
+        sblocca: "🔓 Desbloquear",
+        elimina: "🗑️ Excluir",
+        confermaElimina: "Excluir ",
+        confermaEliminaLista: "⚠️ Confirma exclusão TOTAL?",
+        listaEliminata: "🗑️ Lista excluída.",
+        listaAggiornata: "Lista atualizada: ",
+        elementi: " itens",
+        pwTitolo: "🔒 BLOQUEADO",
+        pwMessaggio: "Senha para desbloquear:",
+        pwSuccesso: "✅ Desbloqueado!",
+        pwErrore: "❌ SENHA INCORRETA!",
+        fileNonValido: "❌ Arquivo inválido!",
+        listaCaricata: "Lista carregada: "
+    },
+    es: {
+        scegliLingua: "Elegir Idioma",
+        tornaHome: "🏠 Inicio",
+        caricaLista: "📂 Cargar Lista",
+        aggiungiAllenatore: "➕ Añadir",
+        allenatoreIngaggiato: "🏆 Contratado",
+        eliminaLista: "🗑️ Borrar Lista",
+        stato: "Estado",
+        nessunaLista: "Sin lista. Pulsa 'Cargar Lista'.",
+        elenco: "📋 Lista Entrenadores",
+        nessunElemento: "Sin entrenadores",
+        senzaNome: "Sin Nombre",
+        filosofia: "Filosofía",
+        ranking: "Ranking",
+        forzaMinima: "Fuerza Mín.",
+        ambiente: "Entorno",
+        dirigenza: "Dirección",
+        progetto: "Proyecto",
+        bonus: "Bono",
+        ingaggio: "Salario",
+        tattica: "📋 Táctica: Tras contratación",
+        disponibile: "Disponible",
+        bloccato: "Bloqueado",
+        inTrattativa: "En Negociación",
+        sblocca: "🔓 Desbloquear",
+        elimina: "🗑️ Borrar",
+        confermaElimina: "¿Borrar ",
+        confermaEliminaLista: "⚠️ ¿Borrar LISTA COMPLETA?",
+        listaEliminata: "🗑️ Lista borrada.",
+        listaAggiornata: "Lista actualizada: ",
+        elementi: " elementos",
+        pwTitolo: "🔒 BLOQUEADO",
+        pwMessaggio: "Contraseña para desbloquear:",
+        pwSuccesso: "✅ ¡Desbloqueado!",
+        pwErrore: "❌ ¡CONTRASEÑA INCORRECTA!",
+        fileNonValido: "❌ Archivo no válido!",
+        listaCaricata: "Lista cargada: "
+    }
+};
+
+// ✅ GESTIONE LINGUA
+function getLingua() { return localStorage.getItem('linguaScelta') || 'it'; }
+function setLingua(l) { localStorage.setItem('linguaScelta', l); }
+
+function aggiornaInterfacciaLingua() {
+    const l = getLingua();
+    const t = traduzioni[l];
+    document.documentElement.lang = l;
+    document.getElementById('bandieraAttuale').textContent = l === 'it' ? '🇮🇹' : l === 'en' ? '🇬🇧' : l === 'pt' ? '🇧🇷' : '🇪🇸';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const chiave = el.getAttribute('data-i18n');
+        if (t[chiave]) el.textContent = t[chiave];
+    });
+}
+
+function toggleMenuLingue() { document.getElementById('menuLingue').classList.toggle('visibile'); }
+
+function cambiaLingua(nuovaLingua) {
+    setLingua(nuovaLingua);
+    aggiornaInterfacciaLingua();
+    toggleMenuLingue();
+    mostraElenco(datiListaCorrente || []); // Aggiorna lista se visibile
+}
+
+// ✅ CHIUDE MENU CLICCANDO FUORI
+document.addEventListener('click', e => {
+    if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile');
+});
+
+// ✅ SALVA SBLOCCHI
+function salvaStatoSblocco(indice, sbloccato) {
+    let stati = JSON.parse(localStorage.getItem('statiSbloccoPermanenti') || '{}');
+    stati[indice] = sbloccato;
+    localStorage.setItem('statiSbloccoPermanenti', JSON.stringify(stati));
+}
+
+// ✅ CARICAMENTO IMMAGINE
+async function caricaImmagineProtetta(percorso, idElemento, datiImmagineBase64 = null) {
+    const elemImg = document.getElementById(idElemento);
+    if (datiImmagineBase64) {
+        elemImg.src = datiImmagineBase64;
+        elemImg.style.display = "block";
+        return;
+    }
+    try {
+        const risposta = await fetch(percorso);
+        if (!risposta.ok) throw new Error("File non trovato");
+        const datiCritti = await risposta.text();
+        const base64 = decrittografa(datiCritti);
+        if (!base64) throw new Error("Decrittografia fallita");
+        elemImg.src = base64;
+        elemImg.style.display = "block";
+    } catch (errore) {
+        console.warn("Immagine non disponibile:", errore);
+        elemImg.alt = "🔒 Immagine protetta";
+    }
+}
+
+let datiListaCorrente = []; // Salva lista per aggiornamento lingua
+
+// ✅ CARICA LISTA
+function caricaLista(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const listaDalFile = decrittografa(e.target.result);
+        const t = traduzioni[getLingua()];
+        if (!listaDalFile) { alert(t.fileNonValido); return; }
+
+        const mieiSblocchi = JSON.parse(localStorage.getItem('statiSbloccoPermanenti') || '{}');
+        listaDalFile.forEach((a,i) => { if (mieiSblocchi[i] === true) a.sbloccato = true; });
+
+        localStorage.setItem('elencoCompletoAllenatori', crittografa(listaDalFile));
+        localStorage.setItem('listaLavoro', crittografa(listaDalFile));
+        datiListaCorrente = listaDalFile;
+        document.getElementById('statoPagina').textContent = t.listaCaricata + listaDalFile.length + t.elementi;
+        mostraElenco(listaDalFile);
+    };
+    reader.readAsText(file);
+}
+
+// ✅ MOSTRA ELENCO
+function mostraElenco(lista) {
+    const contenitore = document.getElementById('elencoAllenatori');
+    const messaggioVuoto = document.getElementById('vuoto');
+    contenitore.innerHTML = '';
+    datiListaCorrente = lista;
+    const t = traduzioni[getLingua()];
+
+    if (!lista || lista.length === 0) { messaggioVuoto.classList.remove('nascosto'); return; }
+    messaggioVuoto.classList.add('nascosto');
+
+    lista.forEach((allenatore, indice) => {
+        const card = document.createElement('div');
+        card.className = 'card-allenatore';
+        let classeStato = 'stato-disponibile', testoStato = t.disponibile;
+        if (allenatore.statoTrattativa === 'bloccato') { classeStato = 'stato-bloccato'; testoStato = t.bloccato; }
+        else if (allenatore.statoTrattativa === 'trattativa') { classeStato = 'stato-trattativa'; testoStato = t.inTrattativa; }
+
+        const isBloccato = allenatore.protetto && !allenatore.sbloccato;
+        let badgeProtezione = isBloccato ? `<span class="badge-protezione stato stato-bloccato">🔒 ${t.bloccato}</span>` : 
+                              allenatore.protetto ? `<span class="badge-protezione stato stato-disponibile">✅ ${t.disponibile}</span>` : '';
+        const classeImmagine = isBloccato ? 'foto-contratto foto-offuscata' : 'foto-contratto';
+        const classeDati = isBloccato ? 'dati-nascosti' : '';
+        const idImg = `foto_${indice}_${allenatore.nome.replace(/\s/g,'_')}`;
+        const percorsoImmagine = `_immagini_protette/${(allenatore.nomeFileFoto || allenatore.nome.replace(/\s/g,'_'))}.dat`;
+
+        card.innerHTML = `
+            <h3>${allenatore.nome || t.senzaNome} ${badgeProtezione}</h3>
+            <p><strong>${t.filosofia}:</strong> ${allenatore.filosofia || '-'}</p>
+            <div class="${classeDati}">
+                <p><strong>${t.ranking}:</strong> ${allenatore.ranking || '-'}</p>
+                <p><strong>${t.forzaMinima}:</strong> ${allenatore.forzaMinima || 3}</p>
+                <p><strong>${t.ambiente}:</strong> ${allenatore.ambiente || 5} | <strong>${t.dirigenza}:</strong> ${allenatore.dirigenza || 5} | <strong>${t.progetto}:</strong> ${allenatore.progetto || 5}</p>
+                <p><strong>${t.bonus}:</strong> €${allenatore.bonus || 0} | <strong>${t.ingaggio}:</strong> €${allenatore.ingaggio || 0}</p>
+            </div>
+            <img id="${idImg}" class="${classeImmagine}" alt="Contratto" style="display:none;">
+            <div class="info-tattica ${classeDati}">${t.tattica}</div>
+            <span class="stato ${classeStato}">${testoStato}</span><br><br>
+            <button id="btnSblocca_${indice}" onclick="sbloccaAllenatore(${indice})" style="margin-right: 8px;" ${!isBloccato ? 'disabled' : ''}>🔓 ${t.sblocca}</button>
+            <button class="btn-rosso" onclick="eliminaElemento('${allenatore.nome}')">🗑️ ${t.elimina}</button>
+        `;
+        contenitore.appendChild(card);
+        if (allenatore.foto) caricaImmagineProtetta(percorsoImmagine, idImg, allenatore.foto);
+    });
+}
+
+// ✅ SBLOCCO
+function sbloccaAllenatore(indice) {
+    const listaCritta = localStorage.getItem('listaLavoro') || localStorage.getItem('elencoCompletoAllenatori');
+    const lista = decrittografa(listaCritta) || [];
+    const allenatore = lista[indice];
+    const t = traduzioni[getLingua()];
+
+    const pw = prompt(`🔒 ${t.pwTitolo}\n${t.pwMessaggio}`);
+    if (pw === null) return;
+
+    if (btoa(pw.trim()) === allenatore.passwordHash) {
+        allenatore.sbloccato = true;
+        salvaStatoSblocco(indice, true);
+        localStorage.setItem('listaLavoro', crittografa(lista));
+        localStorage.setItem('elencoCompletoAllenatori', crittografa(lista));
+        alert(t.pwSuccesso);
+        mostraElenco(lista);
+    } else {
+        alert(t.pwErrore);
+    }
+}
+
+// ✅ ELIMINA LISTA COMPLETA
+function eliminaListaCompleta() {
+    const t = traduzioni[getLingua()];
+    if (!confirm(t.confermaEliminaLista)) return;
+    localStorage.removeItem('listaLavoro');
+    localStorage.removeItem('elencoCompletoAllenatori');
+    localStorage.removeItem('statiSbloccoPermanenti');
+    document.getElementById('elencoAllenatori').innerHTML = '';
+    document.getElementById('statoPagina').textContent = t.listaEliminata;
+    document.getElementById('vuoto').classList.remove('nascosto');
+}
+
+// ✅ ELIMINA SINGOLO
+function eliminaElemento(nome) {
+    const t = traduzioni[getLingua()];
+    if (!confirm(t.confermaElimina + nome + '?')) return;
+    let lista = decrittografa(localStorage.getItem('listaLavoro')) || [];
+    lista = lista.filter(a => a.nome !== nome);
+    localStorage.setItem('listaLavoro', crittografa(lista));
+    mostraElenco(lista);
+    document.getElementById('statoPagina').textContent = t.listaAggiornata + lista.length + t.elementi;
+}
+
+// ✅ CARICAMENTO INIZIALE
+window.onload = function() {
+    aggiornaInterfacciaLingua();
+    const salvata = localStorage.getItem('listaLavoro');
+    if (salvata) {
+        const lista = decrittografa(salvata);
+        if (!lista) return;
+        const t = traduzioni[getLingua()];
+        document.getElementById('statoPagina').textContent = t.listaCaricata + lista.length + t.elementi;
+        mostraElenco(lista);
+    }
+};
+</script>
+</body>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MasterLeague">
+    <link rel="apple-touch-icon" href="icone/icona-192x192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="titolo">Gestione Trattativa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; margin: 0; padding: 0; }
+        body { background: #f0f4f8; padding: 20px; max-width: 900px; margin: auto; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .foto-contratto { max-width: 100%; height: auto; border-radius: 8px; border: 3px solid #3498db; margin: 15px auto; display: block; }
+        .dati { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 5px solid #2980b9; }
+        .riga { display: flex; justify-content: space-between; padding: 10px 0; font-size: 1.1em; border-bottom: 1px solid #ddd; }
+        .evidenza { font-weight: bold; color: #2c3e50; font-size: 1.2em; }
+        .mancante { color: #e74c3c; }
+        .conclusa { color: #27ae60; font-weight: bold; text-align: center; font-size: 1.3em; padding: 15px; background: #e8f5e9; border-radius: 8px; margin: 15px 0; }
+        .fallita { color: #c0392b; font-weight: bold; text-align: center; font-size: 1.3em; padding: 15px; background: #fdecea; border-radius: 8px; margin: 15px 0; }
+        input, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 6px; font-size: 16px; }
+        input { border: 1px solid #bdc3c7; }
+        .btn-aggiungi { background: #f39c12; color: white; border: none; font-weight: bold; }
+        .btn-concludi { background: #27ae60; color: white; border: none; font-weight: bold; }
+        .btn-torna { background: #7f8c8d; color: white; border: none; font-weight: bold; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .contatore-offerte { text-align: center; font-size: 1.1em; color: #555; margin: 10px 0; }
+        .spazio-fisso { margin-top: 20px; }
+
+        /* ✅ SELETTORE LINGUA */
+        .barra-alto { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .contenitore-lingua { position: relative; display: inline-block; }
+        .btn-lingua {
+            background: #34495e; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-lingua:hover { background: #2c3e50; }
+        .menu-lingue {
+            display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 4px;
+        }
+        .menu-lingue.visibile { display: block; }
+        .voce-lingua {
+            padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;
+        }
+        .voce-lingua:hover { background: #f0f4f8; }
+        .bandiera { width: 24px; height: 16px; border-radius: 2px; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<div class="barra-alto">
+    <div></div>
+    <!-- ✅ SELETTORE LINGUA -->
+    <div class="contenitore-lingua">
+        <button class="btn-lingua" onclick="toggleMenuLingue()">
+            <span id="bandieraAttuale">🇮🇹</span>
+            <span data-i18n="scegliLingua">Scegli la lingua</span>
+        </button>
+        <div id="menuLingue" class="menu-lingue">
+            <div class="voce-lingua" onclick="cambiaLingua('it')">🇮🇹 Italiano</div>
+            <div class="voce-lingua" onclick="cambiaLingua('en')">🇬🇧 English</div>
+            <div class="voce-lingua" onclick="cambiaLingua('pt')">🇧🇷 Português</div>
+            <div class="voce-lingua" onclick="cambiaLingua('es')">🇪🇸 Español</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h1>🤝 <span data-i18n="titoloTrattativa">Trattativa</span>: <span id="nomeAllenatore"></span></h1>
+
+    <img id="fotoContratto" class="foto-contratto" src="" alt="Foto Contratto">
+
+    <div class="dati">
+        <div class="riga evidenza">
+            <span>🎯 <span data-i18n="bonusRichiesto">Bonus Richiesto</span>:</span>
+            <span>€ <span id="bonusTotale">0</span></span>
+        </div>
+        <div class="riga">
+            <span>💶 <span data-i18n="giaOfferto">Già Offerto / Pagato</span>:</span>
+            <span>€ <span id="totalePagato">0</span></span>
+        </div>
+        <div class="riga mancante">
+            <span>⚠️ <span data-i18n="importoMancante">Importo Ancora Necessario</span>:</span>
+            <span>€ <span id="mancante">0</span></span>
+        </div>
+    </div>
+
+    <div class="contatore-offerte">
+        📊 <span data-i18n="offertaN">Offerta N°</span> <span id="nOfferta">1</span> <span data-i18n="di3">di 3 Massime</span>
+    </div>
+
+    <div id="messaggioStato"></div>
+
+    <div id="zonaInput" class="spazio-fisso">
+        <input type="number" id="importoNuovo" min="1" data-i18n-placeholder="inserisciImporto" placeholder="Inserisci importo offerta €">
+        <button id="btnAggiungi" class="btn-aggiungi" onclick="aggiungiOfferta()">➕ <span data-i18n="aggiungiOfferta">Aggiungi Offerta</span></button>
+    </div>
+
+    <div class="spazio-fisso">
+        <button id="btnConcludi" class="btn-concludi" onclick="concludiAccordo()" disabled>✅ <span data-i18n="concludiAccordo">Concludi Accordo</span></button>
+        <button id="btnTorna" class="btn-torna" onclick="tornaTrattative()">🔙 <span data-i18n="tornaTrattative">Torna alla pagina Trattative</span></button>
+    </div>
+</div>
+
+<script>
+const PASSWORD_MASTER = "LaTuaPasswordSegreta123";
+function crittografa(dati) { return CryptoJS.AES.encrypt(JSON.stringify(dati), PASSWORD_MASTER).toString(); }
+function decrittografa(s) { if(!s)return null;try{return JSON.parse(CryptoJS.AES.decrypt(s,PASSWORD_MASTER).toString(CryptoJS.enc.Utf8))}catch{return null}}
+
+// ✅ DIZIONARIO MULTILINGUA
+const traduzioni = {
+    it: {
+        titolo: "Gestione Trattativa",
+        scegliLingua: "Scegli la lingua",
+        titoloTrattativa: "Trattativa",
+        bonusRichiesto: "Bonus Richiesto",
+        giaOfferto: "Già Offerto / Pagato",
+        importoMancante: "Importo Ancora Necessario",
+        offertaN: "Offerta N°",
+        di3: "di 3 Massime",
+        inserisciImporto: "Inserisci importo offerta €",
+        aggiungiOfferta: "Aggiungi Offerta",
+        concludiAccordo: "Concludi Accordo",
+        tornaTrattative: "Torna alla pagina Trattative",
+        trattativaConclusa: "🎉 TRATTATIVA CONCLUSA!",
+        accordoFallito: "❌ ACCORDO NON RAGGIUNTO (3 offerte esaurite)",
+        erroreNessunAllenatore: "Errore: nessun allenatore selezionato!",
+        importoNonValido: "Inserisci un importo valido!",
+        accordoFatto: "✅ Accordi siglati! Benvenuto nel tuo nuovo allenatore!"
+    },
+    en: {
+        titolo: "Negotiation",
+        scegliLingua: "Choose Language",
+        titoloTrattativa: "Negotiation",
+        bonusRichiesto: "Required Bonus",
+        giaOfferto: "Already Offered / Paid",
+        importoMancante: "Remaining Amount",
+        offertaN: "Offer #",
+        di3: "of 3 Max",
+        inserisciImporto: "Enter offer amount €",
+        aggiungiOfferta: "Add Offer",
+        concludiAccordo: "Finalize Agreement",
+        tornaTrattative: "Back to Negotiations",
+        trattativaConclusa: "🎉 NEGOTIATION SUCCESSFUL!",
+        accordoFallito: "❌ NO AGREEMENT (3 offers used)",
+        erroreNessunAllenatore: "Error: No coach selected!",
+        importoNonValido: "Enter valid amount!",
+        accordoFatto: "✅ Contract signed! Welcome your new coach!"
+    },
+    pt: {
+        titolo: "Negociação",
+        scegliLingua: "Escolher Idioma",
+        titoloTrattativa: "Negociação",
+        bonusRichiesto: "Bônus Requerido",
+        giaOfferto: "Já Oferecido / Pago",
+        importoMancante: "Valor Restante",
+        offertaN: "Proposta Nº",
+        di3: "de 3 Máx",
+        inserisciImporto: "Insira valor €",
+        aggiungiOfferta: "Adicionar Proposta",
+        concludiAccordo: "Fechar Acordo",
+        tornaTrattative: "Voltar",
+        trattativaConclusa: "🎉 NEGOCIAÇÃO CONCLUÍDA!",
+        accordoFallito: "❌ SEM ACORDO (3 propostas)",
+        erroreNessunAllenatore: "Erro: Nenhum treinador selecionado!",
+        importoNonValido: "Valor inválido!",
+        accordoFatto: "✅ Contrato assinado!"
+    },
+    es: {
+        titolo: "Negociación",
+        scegliLingua: "Elegir Idioma",
+        titoloTrattativa: "Negociación",
+        bonusRichiesto: "Bono Requerido",
+        giaOfferto: "Ya Ofrecido / Pagado",
+        importoMancante: "Importe Faltante",
+        offertaN: "Oferta Nº",
+        di3: "de 3 Máx",
+        inserisciImporto: "Ingrese importe €",
+        aggiungiOfferta: "Añadir Oferta",
+        concludiAccordo: "Cerrar Acuerdo",
+        tornaTrattative: "Volver",
+        trattativaConclusa: "🎉 ¡NEGOCIACIÓN EXITOSA!",
+        accordoFallito: "❌ SIN ACUERDO (3 ofertas)",
+        erroreNessunAllenatore: "Error: Sin entrenador seleccionado!",
+        importoNonValido: "¡Importe inválido!",
+        accordoFatto: "✅ ¡Contrato firmado!"
+    }
+};
+
+// ✅ GESTIONE LINGUA
+function getLingua() { return localStorage.getItem('linguaScelta') || 'it'; }
+function setLingua(l) { localStorage.setItem('linguaScelta', l); }
+
+function aggiornaInterfacciaLingua() {
+    const l = getLingua();
+    const t = traduzioni[l];
+    document.documentElement.lang = l;
+    document.getElementById('bandieraAttuale').textContent = l === 'it' ? '🇮🇹' : l === 'en' ? '🇬🇧' : l === 'pt' ? '🇧🇷' : '🇪🇸';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const chiave = el.getAttribute('data-i18n');
+        if (t[chiave]) el.textContent = t[chiave];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const chiave = el.getAttribute('data-i18n-placeholder');
+        if (t[chiave]) el.placeholder = t[chiave];
+    });
+}
+
+function toggleMenuLingue() { document.getElementById('menuLingue').classList.toggle('visibile'); }
+function cambiaLingua(nuovaLingua) { setLingua(nuovaLingua); aggiornaInterfacciaLingua(); toggleMenuLingue(); aggiornaSchermo(); }
+document.addEventListener('click', e => { if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile'); });
+
+let allenatore = null, bonusObiettivo = 0, sommaOfferto = 0, numeroOfferta = 1;
+
+window.onload = function() {
+    aggiornaInterfacciaLingua();
+    allenatore = decrittografa(localStorage.getItem('trattativaCorrente'));
+    if (!allenatore) { alert(traduzioni[getLingua()].erroreNessunAllenatore); tornaTrattative(); return; }
+    bonusObiettivo = Number(allenatore.bonus || 0);
+    document.getElementById('nomeAllenatore').textContent = allenatore.nome;
+    document.getElementById('fotoContratto').src = allenatore.foto || '';
+    aggiornaSchermo();
+};
+
+function aggiornaSchermo() {
+    const t = traduzioni[getLingua()];
+    const mancante = Math.max(0, bonusObiettivo - sommaOfferto);
+    const completata = sommaOfferto >= bonusObiettivo;
+    const finitoMaxOfferte = numeroOfferta > 3;
+
+    document.getElementById('bonusTotale').textContent = bonusObiettivo.toLocaleString('it-IT');
+    document.getElementById('totalePagato').textContent = sommaOfferto.toLocaleString('it-IT');
+    document.getElementById('mancante').textContent = mancante.toLocaleString('it-IT');
+    document.getElementById('nOfferta').textContent = numeroOfferta;
+
+    if (completata) {
+        document.getElementById('messaggioStato').innerHTML = `<div class="conclusa">${t.trattativaConclusa}</div>`;
+        document.getElementById('btnAggiungi').disabled = true;
+        document.getElementById('importoNuovo').disabled = true;
+        document.getElementById('btnConcludi').disabled = false;
+    } else if (finitoMaxOfferte) {
+        document.getElementById('messaggioStato').innerHTML = `<div class="fallita">${t.accordoFallito}</div>`;
+        document.getElementById('btnAggiungi').disabled = true;
+        document.getElementById('importoNuovo').disabled = true;
+        segnaIndisponibile();
+    }
+}
+
+function aggiungiOfferta() {
+    const t = traduzioni[getLingua()];
+    const imp = Number(document.getElementById('importoNuovo').value) || 0;
+    if (imp <= 0) { alert(t.importoNonValido); document.getElementById('importoNuovo').focus(); return; }
+    sommaOfferto += imp;
+    if (sommaOfferto >= bonusObiettivo) { aggiornaSchermo(); return; }
+    numeroOfferta++;
+    document.getElementById('importoNuovo').value = '';
+    aggiornaSchermo();
+}
+
+function segnaIndisponibile() {
+    const lista = decrittografa(localStorage.getItem('listaLavoro')) || [];
+    const datiSquadra = decrittografa(localStorage.getItem('datiSquadra')) || {};
+    const stagione = datiSquadra.stagione || 1;
+    const idx = lista.findIndex(x => x.nome === allenatore.nome);
+    if (idx >= 0) {
+        lista[idx].statoTrattativa = 'fallita';
+        lista[idx].indisponibile = true;
+        lista[idx].indisponibileFinoStagione = stagione;
+    }
+    localStorage.setItem('listaLavoro', crittografa(lista));
+}
+
+function concludiAccordo() {
+    const t = traduzioni[getLingua()];
+    localStorage.setItem("allenatoreIngaggiato", crittografa({
+        nome: allenatore.nome, ranking: allenatore.ranking, forzaMinima: allenatore.forzaMinima,
+        filosofia: allenatore.filosofia, ambiente: allenatore.ambiente || 5, dirigenza: allenatore.dirigenza || 5,
+        progetto: allenatore.progetto || 5, bonus: allenatore.bonus, ingaggio: allenatore.ingaggio,
+        foto: allenatore.foto, fotoTattica: allenatore.fotoTattica
+    }));
+    const sq = decrittografa(localStorage.getItem('datiSquadra')) || {};
+    sq.allenatoreAttuale = allenatore.nome;
+    localStorage.setItem('datiSquadra', crittografa(sq));
+    alert(t.accordoFatto);
+    localStorage.removeItem('trattativaCorrente');
+    window.location.href = "allenatore-ingaggiato.html";
+}
+
+function tornaTrattative() { localStorage.removeItem('trattativaCorrente'); window.location.href = "trattative.html"; }
+</script>
+</body>

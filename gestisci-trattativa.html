@@ -20,7 +20,8 @@
         .dati { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 5px solid #2980b9; }
         .riga { display: flex; justify-content: space-between; padding: 10px 0; font-size: 1.1em; border-bottom: 1px solid #ddd; }
         .evidenza { font-weight: bold; color: #2c3e50; font-size: 1.2em; }
-        .mancante { color: #e74c3c; }
+        .mancante { color: #e74c3c; font-weight: bold; }
+        .budget-rimanente { color: #27ae60; font-weight: bold; border-top: 2px solid #ccc; padding-top: 12px; margin-top: 8px; }
         .conclusa { color: #27ae60; font-weight: bold; text-align: center; font-size: 1.3em; padding: 15px; background: #e8f5e9; border-radius: 8px; margin: 15px 0; }
         .fallita { color: #c0392b; font-weight: bold; text-align: center; font-size: 1.3em; padding: 15px; background: #fdecea; border-radius: 8px; margin: 15px 0; }
         input, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 6px; font-size: 16px; }
@@ -80,12 +81,20 @@
             <span>€ <span id="bonusTotale">0</span></span>
         </div>
         <div class="riga">
+            <span>💰 <span data-i18n="budgetDisponibile">Budget Disponibile</span>:</span>
+            <span>€ <span id="budgetDisponibile">0</span></span>
+        </div>
+        <div class="riga">
             <span>💶 <span data-i18n="giaOfferto">Già Offerto / Pagato</span>:</span>
             <span>€ <span id="totalePagato">0</span></span>
         </div>
         <div class="riga mancante">
             <span>⚠️ <span data-i18n="importoMancante">Importo Ancora Necessario</span>:</span>
             <span>€ <span id="mancante">0</span></span>
+        </div>
+        <div class="riga budget-rimanente">
+            <span>✅ <span data-i18n="budgetRimanente">Budget Rimanente</span>:</span>
+            <span>€ <span id="budgetRimanente">0</span></span>
         </div>
     </div>
 
@@ -111,15 +120,17 @@ const PASSWORD_MASTER = "LaTuaPasswordSegreta123";
 function crittografa(dati) { return CryptoJS.AES.encrypt(JSON.stringify(dati), PASSWORD_MASTER).toString(); }
 function decrittografa(s) { if(!s)return null;try{return JSON.parse(CryptoJS.AES.decrypt(s,PASSWORD_MASTER).toString(CryptoJS.enc.Utf8))}catch{return null}}
 
-// ✅ DIZIONARIO MULTILINGUA
+// ✅ DIZIONARIO MULTILINGUA AGGIORNATO
 const traduzioni = {
     it: {
         titolo: "Gestione Trattativa",
         scegliLingua: "Scegli la lingua",
         titoloTrattativa: "Trattativa",
         bonusRichiesto: "Bonus Richiesto",
+        budgetDisponibile: "Budget Disponibile",
         giaOfferto: "Già Offerto / Pagato",
         importoMancante: "Importo Ancora Necessario",
+        budgetRimanente: "Budget Rimanente",
         offertaN: "Offerta N°",
         di3: "di 3 Massime",
         inserisciImporto: "Inserisci importo offerta €",
@@ -137,8 +148,10 @@ const traduzioni = {
         scegliLingua: "Choose Language",
         titoloTrattativa: "Negotiation",
         bonusRichiesto: "Required Bonus",
+        budgetDisponibile: "Available Budget",
         giaOfferto: "Already Offered / Paid",
         importoMancante: "Remaining Amount",
+        budgetRimanente: "Remaining Budget",
         offertaN: "Offer #",
         di3: "of 3 Max",
         inserisciImporto: "Enter offer amount €",
@@ -156,8 +169,10 @@ const traduzioni = {
         scegliLingua: "Escolher Idioma",
         titoloTrattativa: "Negociação",
         bonusRichiesto: "Bônus Requerido",
+        budgetDisponibile: "Orçamento Disponível",
         giaOfferto: "Já Oferecido / Pago",
         importoMancante: "Valor Restante",
+        budgetRimanente: "Orçamento Restante",
         offertaN: "Proposta Nº",
         di3: "de 3 Máx",
         inserisciImporto: "Insira valor €",
@@ -175,8 +190,10 @@ const traduzioni = {
         scegliLingua: "Elegir Idioma",
         titoloTrattativa: "Negociación",
         bonusRichiesto: "Bono Requerido",
+        budgetDisponibile: "Presupuesto Disponible",
         giaOfferto: "Ya Ofrecido / Pagado",
         importoMancante: "Importe Faltante",
+        budgetRimanente: "Presupuesto Restante",
         offertaN: "Oferta Nº",
         di3: "de 3 Máx",
         inserisciImporto: "Ingrese importe €",
@@ -215,12 +232,17 @@ function toggleMenuLingue() { document.getElementById('menuLingue').classList.to
 function cambiaLingua(nuovaLingua) { setLingua(nuovaLingua); aggiornaInterfacciaLingua(); toggleMenuLingue(); aggiornaSchermo(); }
 document.addEventListener('click', e => { if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile'); });
 
-let allenatore = null, bonusObiettivo = 0, sommaOfferto = 0, numeroOfferta = 1;
+let allenatore = null, bonusObiettivo = 0, sommaOfferto = 0, numeroOfferta = 1, budgetTotale = 0;
 
 window.onload = function() {
     aggiornaInterfacciaLingua();
     allenatore = decrittografa(localStorage.getItem('trattativaCorrente'));
     if (!allenatore) { alert(traduzioni[getLingua()].erroreNessunAllenatore); tornaTrattative(); return; }
+    
+    // ✅ LEGGE IL BUDGET DAI DATI DELLA SQUADRA
+    const datiSquadra = decrittografa(localStorage.getItem('datiSquadra')) || {};
+    budgetTotale = Number(datiSquadra.budgetDisponibile || 0);
+    
     bonusObiettivo = Number(allenatore.bonus || 0);
     document.getElementById('nomeAllenatore').textContent = allenatore.nome;
     document.getElementById('fotoContratto').src = allenatore.foto || '';
@@ -230,12 +252,15 @@ window.onload = function() {
 function aggiornaSchermo() {
     const t = traduzioni[getLingua()];
     const mancante = Math.max(0, bonusObiettivo - sommaOfferto);
+    const budgetRimanenteCalcolato = budgetTotale - sommaOfferto;
     const completata = sommaOfferto >= bonusObiettivo;
     const finitoMaxOfferte = numeroOfferta > 3;
 
     document.getElementById('bonusTotale').textContent = bonusObiettivo.toLocaleString('it-IT');
+    document.getElementById('budgetDisponibile').textContent = budgetTotale.toLocaleString('it-IT');
     document.getElementById('totalePagato').textContent = sommaOfferto.toLocaleString('it-IT');
     document.getElementById('mancante').textContent = mancante.toLocaleString('it-IT');
+    document.getElementById('budgetRimanente').textContent = Math.max(0, budgetRimanenteCalcolato).toLocaleString('it-IT');
     document.getElementById('nOfferta').textContent = numeroOfferta;
 
     if (completata) {

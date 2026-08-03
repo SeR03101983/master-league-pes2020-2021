@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2c3e50">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="MasterLeague">
-    <link rel="apple-touch-icon" href="icone/icona-192x192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MasterLeague">
+<link rel="apple-touch-icon" href="icone/icona-192x192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="titolo">Allenatore Ingaggiato</title>
@@ -33,7 +33,7 @@
         .btn-turchese { background: #16a085; color: white; }
         .btn-turchese:hover { background: #138d75; }
         .card { background: #fff; border-radius: 8px; padding: 25px; border-top: 4px solid #8e44ad; }
-        .foto { max-width: 100%; border-radius: 8px; border: 3px solid #2980b9; margin: 10px 0; display: block; }
+        .foto { max-width: 100%; border-radius: 8px; border: 3px solid #2980b9; margin: 10px 0; display: block; min-height: 100px; background: #f8f9fa; }
         .riga { margin: 8px 0; padding: 6px 0; border-bottom: 1px solid #eee; }
         .etichetta { font-weight: bold; display: inline-block; width: 200px; }
         .valore { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
@@ -121,7 +121,7 @@
 </div>
 
 <script>
-// ✅ PASSWORD MASTER E FUNZIONI DI CRITTOGRAFIA
+// ✅ PASSWORD MASTER E FUNZIONI DI CRITTOGRAFIA SICURE
 const PASSWORD_MASTER = "LaTuaPasswordSegreta123";
 
 function crittografa(dati) {
@@ -129,361 +129,107 @@ function crittografa(dati) {
 }
 
 function decrittografa(stringaCritta) {
-    if (!stringaCritta || typeof stringaCritta !== 'string' || stringaCritta.trim() === '') {
-        return null;
-    }
+    if (!stringaCritta || typeof stringaCritta !== 'string' || stringaCritta.trim() === '') return null;
     try {
         const bytes = CryptoJS.AES.decrypt(stringaCritta, PASSWORD_MASTER);
         return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-    } catch {
-        console.warn("Dati non validi o corrotti");
-        return null;
-    }
+    } catch { return null; }
 }
 
 // ✅ DIZIONARIO MULTILINGUA
 const traduzioni = {
     it: {
-        titolo: "Allenatore Ingaggiato",
-        scegliLingua: "Scegli la lingua",
-        tornaTrattative: "🔙 Torna a Trattative",
-        resetPartite: "🔄 Resetta Partite",
-        fineStagione: "📅 Fine Stagione",
-        esonerato: "🚫 Esonera Allenatore",
-        titoloSezione: "🏆 Dati Allenatore Ingaggiato",
-        nessunDati: "Nessun allenatore caricato",
-        vaiTrattative: "Vai a Trattative",
-        stagioneBadge: "📅 Stagione",
-        avvertimento: "🔥 ATTENZIONE: Ambiente a 0 - Contestazione Tifosi Attiva! Regole Speciali in Corso!",
-        parametriTitolo: "📊 Parametri Attuali (limite 0-10)",
-        ranking: "Ranking",
-        forzaMinima: "Forza Minima",
-        filosofia: "Filosofia",
-        ambiente: "🏟️ Ambiente",
-        dirigenza: "🤝 Dirigenza",
-        progetto: "📐 Progetto Tecnico",
-        bonus: "💰 Bonus Firma",
-        ingaggio: "💵 Ingaggio Annuale",
-        risultatiTitolo: "⚽ Risultati Partite",
-        vittoria: "✅ Vittoria",
-        pareggio: "➖ Pareggio",
-        sconfitta: "❌ Sconfitta",
-        vittoriaDerby: "🏆 Vittoria Derby",
-        pareggioDerby: "⚖️ Pareggio Derby",
-        sconfittaDerby: "💔 Sconfitta Derby",
-        eventiTitolo: "🏆 Eventi Speciali & Coppe",
-        pnTurno: "📌 Passaggio Turno Coppa Nazionale",
-        pnVittoria: "🏅 Vittoria Coppa Nazionale",
-        pnEliminato: "❌ Eliminazione Coppa Nazionale",
-        piTurno: "📌 Passaggio Turno Coppa Internazionale",
-        piVittoria: "🌍 Vittoria Coppa Internazionale",
-        piEliminato: "❌ Eliminazione Coppa Internazionale",
-        campionato: "⭐ Vittoria Campionato Nazionale",
-        obiettivoSi: "🎯 Obiettivo Stagionale Raggiunto",
-        obiettivoNo: "📉 Obiettivo Stagionale NON Raggiunto",
-        storicoTitolo: "📜 Storico Eventi",
-        nessunEvento: "Nessun evento registrato",
-        documentazione: "📷 Documentazione",
-        fotoContratto: "📄 Foto Contratto",
-        fotoTattica: "📑 Foto Tattica",
-        modaleTitolo: "⚠️ ALLENATORE ESONERATO",
-        modaleTesto: "Devi saldare l'ingaggio stagionale per completare la procedura.",
-        importoDovuto: "Importo dovuto",
-        pagato: "Pagato",
-        inserisciPagamento: "Inserisci importo pagamento",
-        aggiungiImporto: "💳 Aggiungi Importo",
-        pagatoTorna: "✅ Pagato e Torna",
-        confermaReset: "Sei sicuro? Storico cancellato e valori ripristinati all'inizio.",
-        stagioneConclusa: "📅 STAGIONE CONCLUSA!\n\n✅ OK: Rimani con lo stesso allenatore\n❌ Annulla: Cambia/Esonera",
-        stagioneSalvata: "✅ Stagione {num} salvata!\nNuova stagione {nuova} avviata.",
-        erroreDirigenza: "La dirigenza è scesa a zero: esonero automatico"
+        titolo: "Allenatore Ingaggiato", scegliLingua: "Scegli la lingua", tornaTrattative: "🔙 Torna a Trattative",
+        resetPartite: "🔄 Resetta Partite", fineStagione: "📅 Fine Stagione", esonerato: "🚫 Esonera Allenatore",
+        titoloSezione: "🏆 Dati Allenatore Ingaggiato", nessunDati: "Nessun allenatore caricato", vaiTrattative: "Vai a Trattative",
+        stagioneBadge: "📅 Stagione", avvertimento: "🔥 ATTENZIONE: Ambiente a 0 - Contestazione Tifosi Attiva!",
+        parametriTitolo: "📊 Parametri Attuali (0-10)", ranking: "Ranking", forzaMinima: "Forza Minima", filosofia: "Filosofia",
+        ambiente: "🏟️ Ambiente", dirigenza: "🤝 Dirigenza", progetto: "📐 Progetto Tecnico", bonus: "💰 Bonus Firma", ingaggio: "💵 Ingaggio Annuale",
+        risultatiTitolo: "⚽ Risultati Partite", vittoria: "✅ Vittoria", pareggio: "➖ Pareggio", sconfitta: "❌ Sconfitta",
+        vittoriaDerby: "🏆 Vittoria Derby", pareggioDerby: "⚖️ Pareggio Derby", sconfittaDerby: "💔 Sconfitta Derby",
+        eventiTitolo: "🏆 Eventi Speciali & Coppe", pnTurno: "📌 Passaggio Turno Coppa Nazionale", pnVittoria: "🏅 Vittoria Coppa Nazionale",
+        pnEliminato: "❌ Eliminazione Coppa Nazionale", piTurno: "📌 Passaggio Turno Coppa Internazionale", piVittoria: "🌍 Vittoria Coppa Internazionale",
+        piEliminato: "❌ Eliminazione Coppa Internazionale", campionato: "⭐ Campione", obiettivoSi: "🎯 Obiettivo Raggiunto", obiettivoNo: "📉 Obiettivo Non Raggiunto",
+        storicoTitolo: "📜 Storico Eventi", nessunEvento: "Nessun evento", documentazione: "📷 Documenti", fotoContratto: "📄 Contratto", fotoTattica: "📑 Tattica",
+        modaleTitolo: "⚠️ Esonero", modaleTesto: "Paga l'ingaggio per completare", importoDovuto: "Importo dovuto", pagato: "Pagato",
+        inserisciPagamento: "Importo", aggiungiImporto: "Aggiungi", pagatoTorna: "✅ Pagato", confermaReset: "Sicuro di azzerare tutto?",
+        stagioneConclusa: "Stagione finita! Mantieni allenatore?", stagioneSalvata: "Stagione salvata!"
     },
     en: {
-        titolo: "Hired Coach",
-        scegliLingua: "Choose Language",
-        tornaTrattative: "🔙 Back to Negotiations",
-        resetPartite: "🔄 Reset Matches",
-        fineStagione: "📅 End of Season",
-        esonerato: "🚫 Fire Coach",
-        titoloSezione: "🏆 Hired Coach Data",
-        nessunDati: "No coach loaded",
-        vaiTrattative: "Go to Negotiations",
-        stagioneBadge: "📅 Season",
-        avvertimento: "🔥 WARNING: Environment at 0 - Fan Protest Active! Special Rules Enabled!",
-        parametriTitolo: "📊 Current Parameters (0-10 limit)",
-        ranking: "Ranking",
-        forzaMinima: "Min Strength",
-        filosofia: "Philosophy",
-        ambiente: "🏟️ Environment",
-        dirigenza: "🤝 Management",
-        progetto: "📐 Technical Project",
-        bonus: "💰 Signing Bonus",
-        ingaggio: "💵 Annual Salary",
-        risultatiTitolo: "⚽ Match Results",
-        vittoria: "✅ Win",
-        pareggio: "➖ Draw",
-        sconfitta: "❌ Loss",
-        vittoriaDerby: "🏆 Derby Win",
-        pareggioDerby: "⚖️ Derby Draw",
-        sconfittaDerby: "💔 Derby Loss",
-        eventiTitolo: "🏆 Special Events & Cups",
-        pnTurno: "📌 National Cup Progress",
-        pnVittoria: "🏅 National Cup Winner",
-        pnEliminato: "❌ National Cup Eliminated",
-        piTurno: "📌 International Cup Progress",
-        piVittoria: "🌍 International Cup Winner",
-        piEliminato: "❌ International Cup Eliminated",
-        campionato: "⭐ League Champion",
-        obiettivoSi: "🎯 Season Goal Reached",
-        obiettivoNo: "📉 Season Goal NOT Reached",
-        storicoTitolo: "📜 Event History",
-        nessunEvento: "No events recorded",
-        documentazione: "📷 Documentation",
-        fotoContratto: "📄 Contract Photo",
-        fotoTattica: "📑 Tactics Photo",
-        modaleTitolo: "⚠️ COACH FIRED",
-        modaleTesto: "You must pay the annual salary to complete the process.",
-        importoDovuto: "Amount Due",
-        pagato: "Paid",
-        inserisciPagamento: "Enter payment amount",
-        aggiungiImporto: "💳 Add Payment",
-        pagatoTorna: "✅ Paid & Return",
-        confermaReset: "Are you sure? History cleared and values reset.",
-        stagioneConclusa: "📅 SEASON ENDED!\n\n✅ OK: Keep coach\n❌ Cancel: Change/Fire",
-        stagioneSalvata: "✅ Season {num} saved!\nNew season {nuova} started.",
-        erroreDirigenza: "Management reached zero: automatic firing"
+        titolo: "Hired Coach", scegliLingua: "Choose Language", tornaTrattative: "🔙 Back", resetPartite: "🔄 Reset", fineStagione: "📅 End Season", esonerato: "🚫 Fire",
+        titoloSezione: "Coach Details", nessunDati: "No coach", vaiTrattative: "Go Back", stagioneBadge: "📅 Season", avvertimento: "⚠️ WARNING: Low Environment!",
+        parametriTitolo: "📊 Parameters", ranking: "Ranking", forzaMinima: "Min Strength", filosofia: "Style", ambiente: "🏟️ Env", dirigenza: "🤝 Board", progetto: "📐 Plan",
+        bonus: "💰 Bonus", ingaggio: "💵 Salary", risultatiTitolo: "⚽ Results", vittoria: "✅ Win", pareggio: "➖ Draw", sconfitta: "❌ Loss",
+        vittoriaDerby: "🏆 Derby Win", pareggioDerby: "⚖️ Derby Draw", sconfittaDerby: "💔 Derby Loss", eventiTitolo: "🏆 Events",
+        pnTurno: "Cup Progress", pnVittoria: "Cup Winner", pnEliminato: "Cup Out", piTurno: "Euro Progress", piVittoria: "Euro Winner", piEliminato: "Euro Out",
+        campionato: "⭐ League Champ", obiettivoSi: "Goal ✓", obiettivoNo: "Goal ✗", storicoTitolo: "📜 History", nessunEvento: "Empty",
+        documentazione: "📷 Files", fotoContratto: "📄 Contract", fotoTattica: "📑 Tactics", modaleTitolo: "⚠️ Fired", modaleTesto: "Pay salary", importoDovuto: "Due", pagato: "Paid",
+        inserisciPagamento: "Amount", aggiungiImporto: "Add", pagatoTorna: "✅ Done", confermaReset: "Reset all?", stagioneConclusa: "Season end. Keep coach?", stagioneSalvata: "Saved!"
     },
-    pt: {
-        titolo: "Treinador Contratado",
-        scegliLingua: "Escolher Idioma",
-        tornaTrattative: "🔙 Voltar",
-        resetPartite: "🔄 Reiniciar",
-        fineStagione: "📅 Fim Temporada",
-        esonerato: "🚫 Demitir",
-        titoloSezione: "🏆 Dados do Treinador",
-        nessunDati: "Sem dados",
-        vaiTrattative: "Ir para Negociações",
-        stagioneBadge: "📅 Temporada",
-        avvertimento: "🔥 ALERTA: Ambiente 0 - Protestos! Regras Especiais!",
-        parametriTitolo: "📊 Parâmetros (0-10)",
-        ranking: "Ranking",
-        forzaMinima: "Força Mín.",
-        filosofia: "Filosofia",
-        ambiente: "🏟️ Ambiente",
-        dirigenza: "🤝 Direção",
-        progetto: "📐 Projeto Técnico",
-        bonus: "💰 Bônus",
-        ingaggio: "💵 Salário Anual",
-        risultatiTitolo: "⚽ Resultados",
-        vittoria: "✅ Vitória",
-        pareggio: "➖ Empate",
-        sconfitta: "❌ Derrota",
-        vittoriaDerby: "🏆 Vitória Derby",
-        pareggioDerby: "⚖️ Empate Derby",
-        sconfittaDerby: "💔 Derrota Derby",
-        eventiTitolo: "🏆 Eventos & Taças",
-        pnTurno: "📌 Taça Nacional: Avançou",
-        pnVittoria: "🏅 Campeão Nacional",
-        pnEliminato: "❌ Eliminado Nacional",
-        piTurno: "📌 Taça Internacional: Avançou",
-        piVittoria: "🌍 Campeão Internacional",
-        piEliminato: "❌ Eliminado Internacional",
-        campionato: "⭐ Campeão do Campeonato",
-        obiettivoSi: "🎯 Objetivo Alcançado",
-        obiettivoNo: "📉 Objetivo Não Alcançado",
-        storicoTitolo: "📜 Histórico",
-        nessunEvento: "Sem registros",
-        documentazione: "📷 Documentos",
-        fotoContratto: "📄 Contrato",
-        fotoTattica: "📑 Tática",
-        modaleTitolo: "⚠️ TREINADOR DEMITIDO",
-        modaleTesto: "Salde o salário anual para finalizar.",
-        importoDovuto: "Valor Devido",
-        pagato: "Pago",
-        inserisciPagamento: "Valor do pagamento",
-        aggiungiImporto: "💳 Adicionar",
-        pagatoTorna: "✅ Pago e Voltar",
-        confermaReset: "Confirma limpar histórico e reiniciar?",
-        stagioneConclusa: "📅 TEMPORADA ENCERRADA!\n\n✅ OK: Manter\n❌ Cancel: Trocar/Demitir",
-        stagioneSalvata: "✅ Temporada {num} salva!\nNova: {nuova}",
-        erroreDirigenza: "Direção = 0: Demissão automática"
-    },
-    es: {
-        titolo: "Entrenador Contratado",
-        scegliLingua: "Elegir Idioma",
-        tornaTrattative: "🔙 Volver",
-        resetPartite: "🔄 Reiniciar",
-        fineStagione: "📅 Fin Temporada",
-        esonerato: "🚫 Despedir",
-        titoloSezione: "🏆 Datos del Entrenador",
-        nessunDati: "Sin datos",
-        vaiTrattative: "Ir a Negociaciones",
-        stagioneBadge: "📅 Temporada",
-        avvertimento: "🔥 ATENCIÓN: Entorno 0 - ¡Protestas activas! Reglas especiales.",
-        parametriTitolo: "📊 Parámetros (0-10)",
-        ranking: "Ranking",
-        forzaMinima: "Fuerza Mín.",
-        filosofia: "Filosofía",
-        ambiente: "🏟️ Entorno",
-        dirigenza: "🤝 Dirección",
-        progetto: "📐 Proyecto Técnico",
-        bonus: "💰 Bono",
-        ingaggio: "💵 Salario Anual",
-        risultatiTitolo: "⚽ Resultados",
-        vittoria: "✅ Victoria",
-        pareggio: "➖ Empate",
-        sconfitta: "❌ Derrota",
-        vittoriaDerby: "🏆 Victoria Derbi",
-        pareggioDerby: "⚖️ Empate Derbi",
-        sconfittaDerby: "💔 Derrota Derbi",
-        eventiTitolo: "🏆 Eventos & Copas",
-        pnTurno: "📌 Copa Nacional: Avance",
-        pnVittoria: "🏅 Campeón Nacional",
-        pnEliminato: "❌ Eliminado Nacional",
-        piTurno: "📌 Copa Internacional: Avance",
-        piVittoria: "🌍 Campeón Internacional",
-        piEliminato: "❌ Eliminado Internacional",
-        campionato: "⭐ Campeón de Liga",
-        obiettivoSi: "🎯 Objetivo Cumplido",
-        obiettivoNo: "📉 Objetivo NO Cumplido",
-        storicoTitolo: "📜 Historial",
-        nessunEvento: "Sin eventos",
-        documentazione: "📷 Documentación",
-        fotoContratto: "📄 Contrato",
-        fotoTattica: "📑 Táctica",
-        modaleTitolo: "⚠️ ENTRENADOR DESPEDIDO",
-        modaleTesto: "Pague el salario anual para finalizar.",
-        importoDovuto: "Importe Debido",
-        pagato: "Pagado",
-        inserisciPagamento: "Importe a pagar",
-        aggiungiImporto: "💳 Añadir",
-        pagatoTorna: "✅ Pagado y Volver",
-        confermaReset: "¿Seguro? Historial borrado y valores reiniciados.",
-        stagioneConclusa: "📅 TEMPORADA FINALIZADA!\n\n✅ OK: Seguir\n❌ Cancel: Cambiar/Despedir",
-        stagioneSalvata: "✅ Temporada {num} guardada!\nNueva: {nuova}",
-        erroreDirigenza: "Dirección = 0: Despido automático"
-    }
+    pt: {titolo:"Treinador",scegliLingua:"Idioma",tornaTrattative:"🔙 Voltar",resetPartite:"🔄 Reiniciar",fineStagione:"📅 Fim",esonerato:"🚫 Demitir",titoloSeção:"Dados",nessunDati:"Vazio",vaiTrattative:"Ir",stagioneBadge:"📅 Temporada",avvertimento:"⚠️ ALERTA!",parametriTitolo:"📊 Parâmetros",ranking:"Ranking",forzaMinima:"Força",filosofia:"Estilo",ambiente:"🏟️ Amb",dirigenza:"🤝 Diretoria",projeto:"📐 Projeto",bonus:"💰 Bônus",ingaggio:"💵 Salário",risultatiTitolo:"⚽ Resultados",vittoria:"✅ Vitória",pareggio:"➖ Empate",sconfitta:"❌ Derrota",vittoriaDerby:"🏆 Derby",pareggioDerby:"⚖️ Derby",sconfittaDerby:"💔 Derby",eventiTitolo:"🏆 Eventos",pnTurno:"Taça: Avançou",pnVittoria:"🏅 Campeão Nacional",pnEliminato:"❌ Fora",piTurno:"Internacional: Avançou",piVittoria:"🌍 Campeão",piEliminato:"❌ Fora",campionato:"⭐ Liga",obiettivoSi:"🎯 Sim",obiettivoNo:"📉 Não",storicoTitolo:"📜 Histórico",nessunEvento:"Nenhum",documentazione:"📷 Docs",fotoContratto:"📄 Contrato",fotoTattica:"📑 Tática",modaleTitolo:"⚠️ Demitido",modaleTesto:"Pague salário",importoDovuto:"Total",pagato:"Pago",inserisciPagamento:"Valor",aggiungiImporto:"Adicionar",pagatoTorna:"✅ OK",confermaReset:"Tem certeza?",stagioneConclusa:"Fim da temporada. Manter?",stagioneSalvata:"Salvo!"},
+    es: {titolo:"Entrenador",scegliLingua:"Idioma",tornaTrattative:"🔙 Volver",resetPartite:"🔄 Reiniciar",fineStagione:"📅 Fin",esonerato:"🚫 Despedir",titoloSezione:"Datos",nessunDati:"Vacío",vaiTrattative:"Ir",stagioneBadge:"📅 Temporada",avvertimento:"⚠️ ATENCIÓN!",parametriTitolo:"📊 Parámetros",ranking:"Ranking",forzaMinima:"Fuerza",filosofia:"Estilo",ambiente:"🏟️ Entorno",dirigenza:"🤝 Junta",progetto:"📐 Proyecto",bonus:"💰 Bono",ingaggio:"💵 Salario",risultatiTitolo:"⚽ Resultados",vittoria:"✅ Victoria",pareggio:"➖ Empate",sconfitta:"❌ Derrota",vittoriaDerby:"🏆 Derbi",pareggioDerby:"⚖️ Derbi",sconfittaDerby:"💔 Derbi",eventiTitolo:"🏆 Eventos",pnTurno:"Copa: Avance",pnVittoria:"🏅 Campeón",pnEliminato:"❌ Eliminado",piTurno:"Intl: Avance",piVittoria:"🌍 Campeón",piEliminato:"❌ Eliminado",campionato:"⭐ Liga",obiettivoSi:"🎯 Cumplido",obiettivoNo:"📉 No",storicoTitolo:"📜 Historial",nessunEvento:"Vacío",documentazione:"📷 Docs",fotoContratto:"📄 Contrato",fotoTattica:"📑 Táctica",modaleTitolo:"⚠️ Despedido",modaleTesto:"Pagar salario",importoDovuto:"Total",pagato:"Pagado",inserisciPagamento:"Cantidad",aggiungiImporto:"Añadir",pagatoTorna:"✅ OK",confermaReset:"¿Seguro?",stagioneConclusa:"Fin de temporada. ¿Mantener?",stagioneSalvata:"¡Guardado!"}
 };
 
 // ✅ GESTIONE LINGUA
 function getLingua() { return localStorage.getItem('linguaScelta') || 'it'; }
 function setLingua(l) { localStorage.setItem('linguaScelta', l); }
-
 function aggiornaInterfacciaLingua() {
-    const l = getLingua();
-    const t = traduzioni[l];
+    const l = getLingua(), t = traduzioni[l];
     document.documentElement.lang = l;
-    document.getElementById('bandieraAttuale').textContent = l === 'it' ? '🇮🇹' : l === 'en' ? '🇬🇧' : l === 'pt' ? '🇧🇷' : '🇪🇸';
-
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const chiave = el.getAttribute('data-i18n');
-        if (t[chiave]) el.textContent = t[chiave];
-    });
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const chiave = el.getAttribute('data-i18n-placeholder');
-        if (t[chiave]) el.placeholder = t[chiave];
-    });
+    document.getElementById('bandieraAttuale').textContent = {it:'🇮🇹',en:'🇬🇧',pt:'🇧🇷',es:'🇪🇸'}[l];
+    document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(t[k])el.textContent=t[k];});
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(t[k])el.placeholder=t[k];});
 }
+function toggleMenuLingue(){document.getElementById('menuLingue').classList.toggle('visibile');}
+function cambiaLingua(l){setLingua(l);aggiornaInterfacciaLingua();toggleMenuLingue();disegnaPagina();}
+document.addEventListener('click',e=>{if(!e.target.closest('.contenitore-lingua'))document.getElementById('menuLingue').classList.remove('visibile');});
 
-function toggleMenuLingue() { document.getElementById('menuLingue').classList.toggle('visibile'); }
-function cambiaLingua(nuovaLingua) { setLingua(nuovaLingua); aggiornaInterfacciaLingua(); toggleMenuLingue(); disegnaPagina(); }
-document.addEventListener('click', e => { if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile'); });
+// ✅ VARIABILI GLOBALI
+let datiAllenatore = {}, valoriIniziali = {}, storicoPartite = [], importoTotaleDovuto=0, importoPagato=0;
 
-// ✅ FUNZIONE DI SUPPORTO PER SALVATAGGIO FILE
-function salvaFileDatabase(dati, nomeFile) {
-    const contenuto = typeof dati === 'string' ? dati : JSON.stringify(dati, null, 2);
-    const blob = new Blob([contenuto], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nomeFile;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
+function ottieniAnnoStagione(n){const i=2019+(n-1);return `${i}/${String(i+1).slice(-2)}`;}
 
-// ✅ CARICA IMMAGINE PROTETTA
-async function caricaImmagineProtetta(percorso, idElemento, datiImmagineBase64 = null) {
-    const elemImg = document.getElementById(idElemento);
-    if (datiImmagineBase64) {
-        elemImg.src = datiImmagineBase64;
-        elemImg.style.display = "block";
-        return;
-    }
-    try {
-        const risposta = await fetch(percorso);
-        if (!risposta.ok) throw new Error("File non trovato");
-        const datiCritti = await risposta.text();
-        const base64 = decrittografa(datiCritti);
-        if (!base64) throw new Error("Decrittografia fallita");
-        elemImg.src = base64;
-        elemImg.style.display = "block";
-    } catch (errore) {
-        console.warn("Immagine non disponibile:", errore);
-        elemImg.alt = "🔒 Immagine protetta";
-        elemImg.style.display = "none";
-    }
-}
+// ✅ CARICAMENTO IMMAGINE SEMPLICE E PROTETTO
+function caricaImmagine(id, src){const img=document.getElementById(id);if(img&&src){img.onload=()=>{};img.onerror=()=>{img.style.display='none';};img.src=src;img.style.display='block';}}
 
-let datiAllenatore = {};
-let valoriIniziali = {};
-let storicoPartite = [];
-let importoTotaleDovuto = 0;
-let importoPagato = 0;
-
-function ottieniAnnoStagione(numStagione) {
-    const inizio = 2019 + (numStagione - 1);
-    return `${inizio}/${String(inizio + 1).slice(-2)}`;
-}
-
-window.onload = function() {
+window.onload = function(){
     aggiornaInterfacciaLingua();
     const contenuto = document.getElementById('contenuto');
     try {
         const datiCritti = localStorage.getItem('allenatoreIngaggiato');
         datiAllenatore = decrittografa(datiCritti);
-        if (!datiAllenatore) throw "Nessun dato";
+        if (!datiAllenatore) throw 'vuoto';
 
-        if (!datiAllenatore._inizialiSalvati) {
-            valoriIniziali.ambiente = Number(datiAllenatore.ambiente) || 5;
-            valoriIniziali.dirigenza = Number(datiAllenatore.dirigenza) || 5;
-            valoriIniziali.progetto = Number(datiAllenatore.progetto) || 5;
-            datiAllenatore._inizialiSalvati = true;
+        // Salva valori iniziali se nuovi
+        if (!datiAllenatore._iniziali) {
+            valoriIniziali = {ambiente:Number(datiAllenatore.ambiente||5),dirigenza:Number(datiAllenatore.dirigenza||5),progetto:Number(datiAllenatore.progetto||5)};
+            datiAllenatore._iniziali = true;
             datiAllenatore._valoriIniziali = valoriIniziali;
             salvaDati();
-        } else {
-            valoriIniziali = datiAllenatore._valoriIniziali;
-        }
+        } else valoriIniziali = datiAllenatore._valoriIniziali;
 
-        const storicoCritt = localStorage.getItem('storicoPartite');
-        storicoPartite = storicoCritt ? decrittografa(storicoCritt) : [];
+        // Storico
+        const stCritt = localStorage.getItem('storicoPartite');
+        storicoPartite = stCritt ? decrittografa(stCritt) : [];
         disegnaPagina();
-    } catch (e) {
+    } catch(e) {
         const t = traduzioni[getLingua()];
         contenuto.innerHTML = `<div class="vuoto"><h3>${t.nessunDati}</h3><button class="btn-blu" onclick="window.location.href='trattative.html'">${t.vaiTrattative}</button></div>`;
     }
 };
 
-function disegnaPagina() {
+// ✅ PAGINA PRINCIPALE - STRUTTURA FISSA E INALTERABILE
+function disegnaPagina(){
     const t = traduzioni[getLingua()];
     const contenuto = document.getElementById('contenuto');
     const inContestazione = datiAllenatore.ambiente <= 0;
-    const datiSquadraCritti = localStorage.getItem('datiSquadra');
-    const datiSquadra = datiSquadraCritti ? decrittografa(datiSquadraCritti) : {};
+    const datiSquadra = localStorage.getItem('datiSquadra') ? decrittografa(localStorage.getItem('datiSquadra')) : {};
     const numStagione = datiSquadra.stagione || 1;
-    const annoStagione = ottieniAnnoStagione(numStagione);
-
-    const nomeBase = datiAllenatore.nome.replace(/\s/g,'_');
-    const percorsoFoto = `_immagini_protette/${datiAllenatore.nomeFileFoto || nomeBase}.dat`;
-    const percorsoTattica = `_immagini_protette/${datiAllenatore.nomeFileTattica || nomeBase}_tattica.dat`;
-    const idFoto = `foto_contratto_ing`;
-    const idTattica = `foto_tattica_ing`;
 
     contenuto.innerHTML = `
     <div class="card">
         <h2 style="text-align:center; color:#8e44ad;">👤 ${datiAllenatore.nome || 'N/D'}</h2>
-        <div style="text-align:center;"><span class="stagione-badge">${t.stagioneBadge} ${numStagione} - ${annoStagione}</span></div>
+        <div style="text-align:center;"><span class="stagione-badge">${t.stagioneBadge} ${numStagione} - ${ottieniAnnoStagione(numStagione)}</span></div>
         ${inContestazione ? `<div class="avvertenza">${t.avvertimento}</div>` : ''}
 
         <div class="sezione-parametri">
@@ -491,12 +237,18 @@ function disegnaPagina() {
             <div class="riga"><span class="etichetta">${t.ranking}:</span> <span class="valore">${datiAllenatore.ranking || '-'}</span></div>
             <div class="riga"><span class="etichetta">${t.forzaMinima}:</span> <span class="valore">${datiAllenatore.forzaMinima || '-'}</span></div>
             <div class="riga"><span class="etichetta">${t.filosofia}:</span> <span class="valore">${datiAllenatore.filosofia || '-'}</span></div>
-            <div class="riga"><span class="etichetta">${t.ambiente}:</span> <span class="valore">${datiAllenatore.ambiente.toFixed(1)}</span></div>
-            <div class="riga"><span class="etichetta">${t.dirigenza}:</span> <span class="valore">${datiAllenatore.dirigenza.toFixed(1)}</span></div>
-            <div class="riga"><span class="etichetta">${t.progetto}:</span> <span class="valore">${datiAllenatore.progetto.toFixed(1)}</span></div>
-            <div class="riga"><span class="etichetta">${t.bonus}:</span> € ${Number(datiAllenatore.bonus).toLocaleString('it-IT')}</div>
-            <div class="riga"><span class="etichetta">${t.ingaggio}:</span> € ${Number(datiAllenatore.ingaggio).toLocaleString('it-IT')}</div>
+            <div class="riga"><span class="etichetta">${t.ambiente}:</span> <span class="valore">${Number(datiAllenatore.ambiente).toFixed(1)}</span></div>
+            <div class="riga"><span class="etichetta">${t.dirigenza}:</span> <span class="valore">${Number(datiAllenatore.dirigenza).toFixed(1)}</span></div>
+            <div class="riga"><span class="etichetta">${t.progetto}:</span> <span class="valore">${Number(datiAllenatore.progetto).toFixed(1)}</span></div>
+            <div class="riga"><span class="etichetta">${t.bonus}:</span> € ${Number(datiAllenatore.bonus||0).toLocaleString('it-IT')}</div>
+            <div class="riga"><span class="etichetta">${t.ingaggio}:</span> € ${Number(datiAllenatore.ingaggio||0).toLocaleString('it-IT')}</div>
         </div>
+
+        <h3 class="titolo-sezione">${t.documentazione}</h3>
+        <h4>${t.fotoContratto}</h4>
+        <img id="imgContratto" class="foto" alt="Contratto">
+        <h4>${t.fotoTattica}</h4>
+        <img id="imgTattica" class="foto" alt="Tattica">
 
         <h3 class="titolo-sezione">${t.risultatiTitolo}</h3>
         <div class="griglia-pulsanti">
@@ -523,142 +275,107 @@ function disegnaPagina() {
 
         <div class="storico">
             <h3>${t.storicoTitolo} (${storicoPartite.length})</h3>
-            ${storicoPartite.length === 0 ? `<p style="color:#777; font-style:italic;">${t.nessunEvento}</p>` : storicoPartite.map(p => `<div class="riga-partita">${p.data} - ${p.risultato}</div>`).join('')}
+            ${storicoPartite.length === 0 ? `<p style="color:#777">${t.nessunEvento}</p>` : storicoPartite.map(p=>`<div class="riga-partita">${p.data} - ${p.testo}</div>`).join('')}
         </div>
-
-        <h3 class="titolo-sezione">${t.documentazione}</h3>
-        <h4>${t.fotoContratto}</h4>
-        <img id="${idFoto}" class="foto" style="display:none;">
-        <h4>${t.fotoTattica}</h4>
-        <img id="${idTattica}" class="foto" style="display:none;">
     </div>`;
 
-    if (datiAllenatore.foto) caricaImmagineProtetta(percorsoFoto, idFoto, datiAllenatore.foto);
-    if (datiAllenatore.fotoTattica) caricaImmagineProtetta(percorsoTattica, idTattica, datiAllenatore.fotoTattica);
+    // ✅ CARICA IMMAGINI DOPO CREAZIONE HTML
+    if (datiAllenatore.foto) caricaImmagine('imgContratto', datiAllenatore.foto);
+    if (datiAllenatore.fotoTattica) caricaImmagine('imgTattica', datiAllenatore.fotoTattica);
 }
 
-function applicaRisultato(tipo) {
+// ✅ REGOLE RISULTATI ORIGINALI
+function applicaRisultato(tipo){
     const t = traduzioni[getLingua()];
-    const inContestazione = datiAllenatore.ambiente <= 0;
     const regoleNormali = {
-        'vittoria': { ambiente: +1, dirigenza: +1, progetto: +0.5, nome: t.vittoria },
-        'pareggio': { ambiente: 0, dirigenza: 0, progetto: +0.5, nome: t.pareggio },
-        'sconfitta': { ambiente: -1, dirigenza: -1, progetto: -1, nome: t.sconfitta },
-        'vittoria_derby': { ambiente: +2, dirigenza: +1.5, progetto: +0.5, nome: t.vittoriaDerby },
-        'pareggio_derby': { ambiente: +1, dirigenza: +1, progetto: +0.5, nome: t.pareggioDerby },
-        'sconfitta_derby': { ambiente: -2, dirigenza: -1.5, progetto: -1, nome: t.sconfittaDerby }
+        vittoria: {a:+1,d:+1,p:+0.5,t:t.vittoria},
+        pareggio: {a:0,d:0,p:+0.5,t:t.pareggio},
+        sconfitta: {a:-1,d:-1,p:-1,t:t.sconfitta},
+        vittoria_derby: {a:+2,d:+1.5,p:+0.5,t:t.vittoriaDerby},
+        pareggio_derby: {a:+1,d:+1,p:+0.5,t:t.pareggioDerby},
+        sconfitta_derby: {a:-2,d:-1.5,p:-1,t:t.sconfittaDerby}
     };
-    const regoleContestazione = {
-        'vittoria': { ambiente: +1, dirigenza: +1, progetto: +0.5, nome: `${t.vittoria} (OK)` },
-        'pareggio': { ambiente: 0, dirigenza: -1.5, progetto: +0.5, nome: `${t.pareggio} (!)` },
-        'sconfitta': { ambiente: 0, dirigenza: -3, progetto: -1.5, nome: `${t.sconfitta} (!)` },
-        'vittoria_derby': { ambiente: +1.5, dirigenza: +2, progetto: +0.5, nome: `${t.vittoriaDerby} (OK)` },
-        'pareggio_derby': { ambiente: 0, dirigenza: -1, progetto: -1, nome: `${t.pareggioDerby} (!)` },
-        'sconfitta_derby': { ambiente: 0, dirigenza: -2, progetto: -1.5, nome: `${t.sconfittaDerby} (!)` }
+    const regoleCritiche = {
+        vittoria: {a:+1,d:+1,p:+0.5,t:t.vittoria},
+        pareggio: {a:0,d:-1.5,p:+0.5,t:t.pareggio},
+        sconfitta: {a:0,d:-3,p:-1.5,t:t.sconfitta},
+        vittoria_derby: {a:+1.5,d:+2,p:+0.5,t:t.vittoriaDerby},
+        pareggio_derby: {a:0,d:-1,p:-1,t:t.pareggioDerby},
+        sconfitta_derby: {a:0,d:-2,p:-1.5,t:t.sconfittaDerby}
     };
-    const regole = inContestazione ? regoleContestazione : regoleNormali;
+    const regole = datiAllenatore.ambiente <= 0 ? regoleCritiche : regoleNormali;
     const r = regole[tipo];
-    datiAllenatore.ambiente = limitaValore(datiAllenatore.ambiente + r.ambiente);
-    datiAllenatore.dirigenza = limitaValore(datiAllenatore.dirigenza + r.dirigenza);
-    datiAllenatore.progetto = limitaValore(datiAllenatore.progetto + r.progetto);
-    aggiungiStorico(r.nome); salvaDati(); disegnaPagina(); controllaDirigenzaZero();
+    datiAllenatore.ambiente = limita(datiAllenatore.ambiente + r.a);
+    datiAllenatore.dirigenza = limita(datiAllenatore.dirigenza + r.d);
+    datiAllenatore.progetto = limita(datiAllenatore.progetto + r.p);
+    aggiungiStorico(r.t); salvaDati(); disegnaPagina(); controllaEsito();
 }
 
-function applicaEvento(tipo) {
+// ✅ EVENTI SPECIALI
+function applicaEvento(tipo){
     const t = traduzioni[getLingua()];
-    const eventi = {
-        'pn_turno':      { ambiente: +1,  dirigenza: +1,   progetto: +0.5, nome: t.pnTurno },
-        'pn_vittoria':   { ambiente: +2,  dirigenza: +2,   progetto: +1,   nome: t.pnVittoria },
-        'pn_eliminato':  { ambiente: -1,  dirigenza: -1,   progetto: -1,   nome: t.pnEliminato },
-        'pi_turno':      { ambiente: +2,  dirigenza: +1.5, progetto: +1,   nome: t.piTurno },
-        'pi_vittoria':   { ambiente: +10, dirigenza: +10,  progetto: +10,  nome: t.piVittoria },
-        'pi_eliminato':  { ambiente: -2,  dirigenza: -1.5, progetto: -1,   nome: t.piEliminato },
-        'campionato':    { ambiente: +5,  dirigenza: +5,   progetto: +5,   nome: t.campionato },
-        'obiettivo_si':  { ambiente: +3,  dirigenza: +3,   progetto: +1.5, nome: t.obiettivoSi },
-        'obiettivo_no':  { ambiente: -3,  dirigenza: -3,   progetto: -1.5, nome: t.obiettivoNo }
+    const ev = {
+        pn_turno: {a:+1,d:+1,p:+0.5,t:t.pnTurno},
+        pn_vittoria: {a:+2,d:+2,p:+1,t:t.pnVittoria},
+        pn_eliminato: {a:-1,d:-1,p:-1,t:t.pnEliminato},
+        pi_turno: {a:+2,d:+1.5,p:+1,t:t.piTurno},
+        pi_vittoria: {a:+10,d:+10,p:+10,t:t.piVittoria},
+        pi_eliminato: {a:-2,d:-1.5,p:-1,t:t.piEliminato},
+        campionato: {a:+5,d:+5,p:+5,t:t.campionato},
+        obiettivo_si: {a:+3,d:+3,p:+1.5,t:t.obiettivoSi},
+        obiettivo_no: {a:-3,d:-3,p:-1.5,t:t.obiettivoNo}
+    }[tipo];
+    datiAllenatore.ambiente = limita(datiAllenatore.ambiente + ev.a);
+    datiAllenatore.dirigenza = limita(datiAllenatore.dirigenza + ev.d);
+    datiAllenatore.progetto = limita(datiAllenatore.progetto + ev.p);
+    aggiungiStorico(ev.t); salvaDati(); disegnaPagina(); controllaEsito();
+}
+
+function limita(v){return Math.max(0,Math.min(10,Math.round(v*10)/10));}
+function aggiungiStorico(testo){storicoPartite.unshift({testo, data:new Date().toLocaleString('it-IT')});}
+function salvaDati(){localStorage.setItem('allenatoreIngaggiato',crittografa(datiAllenatore));localStorage.setItem('storicoPartite',crittografa(storicoPartite));}
+function controllaEsito(){if(datiAllenatore.dirigenza<=0)apriModalePagamento();}
+
+function azzeraStoricoERipristina(){
+    const t=traduzioni[getLingua()];
+    if(confirm(t.confermaReset)){storicoPartite=[];datiAllenatore.ambiente=valoriIniziali.ambiente;datiAllenatore.dirigenza=valoriIniziali.dirigenza;datiAllenatore.progetto=valoriIniziali.progetto;salvaDati();disegnaPagina();}
+}
+
+function gestisciFineStagione(){
+    const t=traduzioni[getLingua()];
+    const datiSquadra = localStorage.getItem('datiSquadra') ? decrittografa(localStorage.getItem('datiSquadra')) : {};
+    const stagione = datiSquadra.stagione || 1;
+
+    // Salva storico carriera
+    const record = {
+        stagione, anno:ottieniAnnoStagione(stagione), nome:datiAllenatore.nome,
+        iniziali:{...valoriIniziali}, finali:{a:datiAllenatore.ambiente,d:datiAllenatore.dirigenza,p:datiAllenatore.progetto},
+        campionato:storicoPartite.some(x=>x.testo.includes(t.campionato))
     };
-    const ev = eventi[tipo];
-    datiAllenatore.ambiente = limitaValore(datiAllenatore.ambiente + ev.ambiente);
-    datiAllenatore.dirigenza = limitaValore(datiAllenatore.dirigenza + ev.dirigenza);
-    datiAllenatore.progetto = limitaValore(datiAllenatore.progetto + ev.progetto);
-    aggiungiStorico(ev.nome); salvaDati(); disegnaPagina(); controllaDirigenzaZero();
+    const carriera = localStorage.getItem('storicoCarriera') ? decrittografa(localStorage.getItem('storicoCarriera')) : [];
+    carriera.push(record); localStorage.setItem('storicoCarriera',crittografa(carriera));
+
+    datiSquadra.stagione = stagione + 1; localStorage.setItem('datiSquadra',crittografa(datiSquadra));
+
+    if(confirm(t.stagioneConclusa)){
+        storicoPartite=[]; valoriIniziali={ambiente:datiAllenatore.ambiente,dirigenza:datiAllenatore.dirigenza,progetto:datiAllenatore.progetto};
+        datiAllenatore._valoriIniziali=valoriIniziali; salvaDati(); disegnaPagina(); alert(t.stagioneSalvata);
+    } else { datiAllenatore._esonerato=true; salvaDati(); apriModalePagamento(); }
 }
 
-function limitaValore(val) { return Math.max(0, Math.min(10, Math.round(val * 10) / 10)); }
-function aggiungiStorico(testo) { storicoPartite.unshift({ risultato: testo, data: new Date().toLocaleString('it-IT') }); }
-
-function azzeraStoricoERipristina() {
-    const t = traduzioni[getLingua()];
-    if (confirm(t.confermaReset)) {
-        storicoPartite = [];
-        datiAllenatore.ambiente = valoriIniziali.ambiente;
-        datiAllenatore.dirigenza = valoriIniziali.dirigenza;
-        datiAllenatore.progetto = valoriIniziali.progetto;
-        salvaDati(); disegnaPagina();
-    }
+// ✅ MODALE PAGAMENTO
+function apriModalePagamento(){
+    importoTotaleDovuto = Number(datiAllenatore.ingaggio)||0; importoPagato=0;
+    document.getElementById('importoIngaggio').textContent=importoTotaleDovuto.toLocaleString('it-IT');
+    document.getElementById('totaleDovuto').textContent=importoTotaleDovuto.toLocaleString('it-IT');
+    aggiornaPagamentoUI(); document.getElementById('modaleEsonero').classList.remove('nascosto');
 }
-
-function gestisciFineStagione() {
-    const t = traduzioni[getLingua()];
-    const datiSquadraCritti = localStorage.getItem('datiSquadra');
-    const datiSquadra = datiSquadraCritti ? decrittografa(datiSquadraCritti) : {};
-    const stagionePrecedente = datiSquadra.stagione || 1;
-    const numStagione = stagionePrecedente;
-    const esonerato = datiAllenatore._esonerato === true;
-
-    let obiettivo = 'Nessun dato';
-    if (storicoPartite.some(p => p.risultato === t.obiettivoSi)) obiettivo = 'Raggiunto';
-    else if (storicoPartite.some(p => p.risultato === t.obiettivoNo)) obiettivo = 'Non Raggiunto';
-
-    const recordStagionale = {
-        numStagione, anno: ottieniAnnoStagione(numStagione), nomeAllenatore: datiAllenatore.nome, esonerato,
-        iniziali: {...valoriIniziali}, finali: {ambiente: datiAllenatore.ambiente, dirigenza: datiAllenatore.dirigenza, progetto: datiAllenatore.progetto},
-        campionato: !!storicoPartite.find(p => p.risultato.includes(t.campionato)),
-        coppeNazionali: storicoPartite.filter(p => p.risultato.includes('Coppa') && p.risultato.includes('Vittoria') && !p.risultato.includes('Internazionale')).length,
-        coppeInternazionali: storicoPartite.filter(p => p.risultato.includes('Internazionale') && p.risultato.includes('Vittoria')).length,
-        obiettivo
-    };
-
-    const storicoCritt = localStorage.getItem('storicoCarriera');
-    let storico = storicoCritt ? decrittografa(storicoCritt) : [];
-    storico = storico.filter(r => !(r.numStagione === numStagione && r.nomeAllenatore === datiAllenatore.nome));
-    storico.push(recordStagionale);
-    localStorage.setItem('storicoCarriera', crittografa(storico));
-
-    datiSquadra.stagione = stagionePrecedente + 1;
-    localStorage.setItem('datiSquadra', crittografa(datiSquadra));
-
-    const scelta = confirm(t.stagioneConclusa);
-    if (scelta) {
-        storicoPartite = [];
-        valoriIniziali.ambiente = datiAllenatore.ambiente;
-        valoriIniziali.dirigenza = datiAllenatore.dirigenza;
-        valoriIniziali.progetto = datiAllenatore.progetto;
-        datiAllenatore._valoriIniziali = valoriIniziali;
-        salvaDati(); disegnaPagina();
-        alert(t.stagioneSalvata.replace('{num}', numStagione).replace('{nuova}', datiSquadra.stagione));
-    } else {
-        datiAllenatore._esonerato = true; salvaDati(); apriModalePagamento();
-    }
-}
-
-function controllaDirigenzaZero() { if (Number(datiAllenatore.dirigenza) <= 0) apriModalePagamento(); }
-function apriModalePagamento() { importoTotaleDovuto = Number(datiAllenatore.ingaggio) || 0; importoPagato = 0; document.getElementById('importoIngaggio').textContent = importoTotaleDovuto.toLocaleString('it-IT'); document.getElementById('totaleDovuto').textContent = importoTotaleDovuto.toLocaleString('it-IT'); aggiornaPagamentoUI(); document.getElementById('modaleEsonero').classList.remove('nascosto'); }
-function aggiungiPagamento() { const val = Number(document.getElementById('offertaPagamento').value) || 0; importoPagato += val; if (importoPagato > importoTotaleDovuto) importoPagato = importoTotaleDovuto; aggiornaPagamentoUI(); document.getElementById('offertaPagamento').value = ''; }
-function aggiornaPagamentoUI() { document.getElementById('totalePagato').textContent = importoPagato.toLocaleString('it-IT'); document.getElementById('btnConfermaPagamento').disabled = (importoPagato < importoTotaleDovuto); }
-function salvaDati() { localStorage.setItem('allenatoreIngaggiato', crittografa(datiAllenatore)); localStorage.setItem('storicoPartite', crittografa(storicoPartite)); }
-
-function confermaPagamento() {
+function aggiungiPagamento(){const v=Number(document.getElementById('offertaPagamento').value)||0; importoPagato=Math.min(importoPagato+v,importoTotaleDovuto); aggiornaPagamentoUI(); document.getElementById('offertaPagamento').value='';}
+function aggiornaPagamentoUI(){document.getElementById('totalePagato').textContent=importoPagato.toLocaleString('it-IT'); document.getElementById('btnConfermaPagamento').disabled=(importoPagato<importoTotaleDovuto);}
+function confermaPagamento(){
     localStorage.removeItem('allenatoreIngaggiato'); localStorage.removeItem('storicoPartite');
-    try {
-        const datiSquadraCritti = localStorage.getItem('datiSquadra');
-        const datiSquadra = datiSquadraCritti ? decrittografa(datiSquadraCritti) : {};
-        const numStagione = datiSquadra.stagione || 1;
-        let obiettivo = 'Nessun dato';
-        const t = traduzioni[getLingua()];
-        if (storicoPartite.some(p => p.risultato === t.obiettivoSi)) obiettivo = 'Raggiunto';
-        else if (storicoPartite.some(p => p.risultato === t.obiettivoNo)) obiettivo = 'Non Raggiunto';
-
-        const recordStagionale = {
-            numStagione, anno: ottieniAnnoStagione(numStagione), nomeAllenatore: datiAllenatore.nome || 'Sconosciuto', esonerato: true,
-            iniziali: valoriIniziali, finali: {ambiente: datiAllenatore.ambiente ?? 0, dirigenza: datiAllenatore.dirigenza ?? 0, progetto: datiAllenatore.progetto ?? 0},
+    window.location.href='trattative.html';
+}
+</script>
+</body>
+</html>

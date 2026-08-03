@@ -239,10 +239,10 @@ window.onload = function() {
     allenatore = decrittografa(localStorage.getItem('trattativaCorrente'));
     if (!allenatore) { alert(traduzioni[getLingua()].erroreNessunAllenatore); tornaTrattative(); return; }
     
-    // ✅ LEGGE IL BUDGET DAI DATI DELLA SQUADRA
-    const datiSquadra = decrittografa(localStorage.getItem('datiSquadra')) || {};
-    budgetTotale = Number(datiSquadra.budgetDisponibile || 0);
-    
+    // ✅ LEGGE IL BUDGET ESATTAMENTE DOVE LO SALVA LA PAGINA TRATTATIVE/HOME
+    const datiSquadraCompleti = decrittografa(localStorage.getItem('datiSquadra')) || {};
+    budgetTotale = Number(datiSquadraCompleti.budget || 0); // <-- QUI PRENDE LO STESSO VALORE DEL RIQUADRO VERDE
+
     bonusObiettivo = Number(allenatore.bonus || 0);
     document.getElementById('nomeAllenatore').textContent = allenatore.nome;
     document.getElementById('fotoContratto').src = allenatore.foto || '';

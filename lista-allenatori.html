@@ -88,7 +88,7 @@
 </div>
 
 <div class="info-file">
-📄 <strong data-i18n="stato">Stato:</strong> <span id="statoPagina" data-i18n="nessunaLista">Nessuna lista caricata. Clicca "Carica Lista Allenatori" per selezionare il file.</span>
+📄 <strong data-i18n="stato">Stato:</strong> <span id="statoPagina" data-i18n="nessunaLista">Caricamento database in corso...</span>
 </div>
 
 <div class="sezione">
@@ -333,7 +333,32 @@ async function caricaImmagineProtetta(percorso, idElemento, datiImmagineBase64 =
 
 let datiListaCorrente = []; // Salva lista per aggiornamento lingua
 
-// ✅ CARICA LISTA
+// ✅ CARICAMENTO AUTOMATICO DAL SERVER GITHUB
+function caricaDatabaseAutomatico() {
+    const percorsoFile = "database/default.json"; // ✅ PERCORSO ESATTO
+    fetch(percorsoFile)
+    .then(risposta => {
+        if (!risposta.ok) throw new Error("File non trovato");
+        return risposta.text();
+    })
+    .then(datiCritti => {
+        const listaDalFile = decrittografa(datiCritti);
+        if (!listaDalFile) return;
+
+        const mieiSblocchi = JSON.parse(localStorage.getItem('statiSbloccoPermanenti') || '{}');
+        listaDalFile.forEach((a,i) => { if (mieiSblocchi[i] === true) a.sbloccato = true; });
+
+        localStorage.setItem('elencoCompletoAllenatori', crittografa(listaDalFile));
+        localStorage.setItem('listaLavoro', crittografa(listaDalFile));
+        datiListaCorrente = listaDalFile;
+        const t = traduzioni[getLingua()];
+        document.getElementById('statoPagina').textContent = t.listaCaricata + listaDalFile.length + t.elementi;
+        mostraElenco(listaDalFile);
+    })
+    .catch(errore => console.log("Database non caricato in automatico:", errore));
+}
+
+// ✅ CARICA LISTA MANUALE
 function caricaLista(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -449,6 +474,9 @@ function eliminaElemento(nome) {
 // ✅ CARICAMENTO INIZIALE
 window.onload = function() {
     aggiornaInterfacciaLingua();
+    // 1. Prova a caricare automaticamente dal server
+    caricaDatabaseAutomatico();
+    // 2. Se esiste già una lista in locale, la mostra in ogni caso
     const salvata = localStorage.getItem('listaLavoro');
     if (salvata) {
         const lista = decrittografa(salvata);

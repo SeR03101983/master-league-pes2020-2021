@@ -75,7 +75,7 @@
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button class="btn-verde" onclick="window.location.href='trattative.html'" data-i18n="tornaTrattative">🔙 Torna a Trattative</button>
         <button class="btn-giallo" onclick="azzeraStoricoERipristina()" data-i18n="resetPartite">🔄 Resetta Partite</button>
-        <button class="btn-turchese" onclick="gestisciFineStagione()" data-i18n="fineStagione">📅 Fine Stagione</button>
+        <button class="btn-turchese" onclick="gestisciFineStagione(false)" data-i18n="fineStagione">📅 Fine Stagione</button>
         <button class="btn-rosso" onclick="apriModalePagamento()" data-i18n="esonerato">🚫 Esonera Allenatore</button>
     </div>
     <!-- ✅ SELETTORE LINGUA -->
@@ -114,7 +114,7 @@
         </div>
 
         <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn-giallo" onclick="aggiungiPagamento()" data-i18n="aggiungiImporto">💳 Aggiungi Importo</button>
+            <button class="btn-giallo" onclick="aggiungiPagamento()">💳 Aggiungi Importo</button>
             <button id="btnConfermaPagamento" class="btn-verde" onclick="confermaPagamento()" disabled>✅ <span data-i18n="pagatoTorna">Pagato e Torna</span></button>
         </div>
     </div>
@@ -343,13 +343,12 @@ function azzeraStoricoERipristina(){
     if(confirm(t.confermaReset)){storicoPartite=[];datiAllenatore.ambiente=valoriIniziali.ambiente;datiAllenatore.dirigenza=valoriIniziali.dirigenza;datiAllenatore.progetto=valoriIniziali.progetto;salvaDati();disegnaPagina();}
 }
 
-// ✅ FUNZIONE FINE STAGIONE - COMPLETA E VISIBILE
-function gestisciFineStagione(){
+// ✅ FUNZIONE FINE STAGIONE / ESONERO: SALVA SEMPRE IL FLAG ESONERATO
+function gestisciFineStagione(esonerato = false){
     const t = traduzioni[getLingua()];
     const datiSquadra = localStorage.getItem('datiSquadra') ? decrittografa(localStorage.getItem('datiSquadra')) : {};
     const numeroStagione = datiSquadra.stagione || 1;
 
-    // Conteggio eventi per storico
     const coppeNazionaliVinte = storicoPartite.filter(x => x.testo.includes(t.pnVittoria)).length;
     const coppeInternazionaliVinte = storicoPartite.filter(x => x.testo.includes(t.piVittoria)).length;
     const obiettivoRaggiunto = storicoPartite.some(x => x.testo.includes(t.obiettivoSi)) ? true : 
@@ -359,61 +358,46 @@ function gestisciFineStagione(){
         numStagione: numeroStagione,
         anno: ottieniAnnoStagione(numeroStagione),
         nomeAllenatore: datiAllenatore.nome || 'N/D',
-        iniziali: {
-            ambiente: valoriIniziali.ambiente,
-            dirigenza: valoriIniziali.dirigenza,
-            progetto: valoriIniziali.progetto
-        },
-        finali: {
-            ambiente: Number(datiAllenatore.ambiente).toFixed(1),
-            dirigenza: Number(datiAllenatore.dirigenza).toFixed(1),
-            progetto: Number(datiAllenatore.progetto).toFixed(1)
-        },
+        iniziali: {ambiente: valoriIniziali.ambiente, dirigenza: valoriIniziali.dirigenza, progetto: valoriIniziali.progetto},
+        finali: {ambiente: Number(datiAllenatore.ambiente).toFixed(1), dirigenza: Number(datiAllenatore.dirigenza).toFixed(1), progetto: Number(datiAllenatore.progetto).toFixed(1)},
         campionato: storicoPartite.some(x => x.testo.includes(t.campionato)),
         coppeNazionali: coppeNazionaliVinte,
         coppeInternazionali: coppeInternazionaliVinte,
         obiettivoRaggiunto: obiettivoRaggiunto,
-        esonerato: false
+        esonerato: esonerato // ✅ SALVATAGGIO SICURO
     };
 
-    // Salva nello Storico
     let storicoCarriera = localStorage.getItem('storicoCarriera') ? decrittografa(localStorage.getItem('storicoCarriera')) : [];
     if (!Array.isArray(storicoCarriera)) storicoCarriera = [];
     storicoCarriera.push(recordStagionale);
     localStorage.setItem('storicoCarriera', crittografa(storicoCarriera));
 
-    // Avanza stagione
     datiSquadra.stagione = numeroStagione + 1;
     localStorage.setItem('datiSquadra', crittografa(datiSquadra));
+
+    if (esonerato) return; // Se esonerato, non chiedere continuare
 
     if (confirm(t.stagioneConclusa)) {
         alert(t.stagioneSalvata);
         storicoPartite = [];
-        valoriIniziali = {
-            ambiente: Number(datiAllenatore.ambiente),
-            dirigenza: Number(datiAllenatore.dirigenza),
-            progetto: Number(datiAllenatore.progetto)
-        };
+        valoriIniziali = {ambiente: Number(datiAllenatore.ambiente), dirigenza: Number(datiAllenatore.dirigenza), progetto: Number(datiAllenatore.progetto)};
         datiAllenatore._valoriIniziali = valoriIniziali;
         salvaDati();
         disegnaPagina();
     } else {
-        recordStagionale.esonerato = true;
-        const idx = storicoCarriera.findIndex(r => r.numStagione === numeroStagione);
-        if (idx >= 0) storicoCarriera[idx].esonerato = true;
-        localStorage.setItem('storicoCarriera', crittografa(storicoCarriera));
-        datiAllenatore._esonerato = true;
-        salvaDati();
+        gestisciFineStagione(true); // Chiama se stesso come esonero
         apriModalePagamento();
     }
 }
 
-// ✅ MODALE PAGAMENTO
+// ✅ MODALE PAGAMENTO: IMPOSTA ESONERO PRIMA ANCHE QUI
 function apriModalePagamento(){
     importoTotaleDovuto = Number(datiAllenatore.ingaggio)||0; importoPagato=0;
     document.getElementById('importoIngaggio').textContent=importoTotaleDovuto.toLocaleString('it-IT');
     document.getElementById('totaleDovuto').textContent=importoTotaleDovuto.toLocaleString('it-IT');
     aggiornaPagamentoUI(); document.getElementById('modaleEsonero').classList.remove('nascosto');
+    // ✅ Salva subito come esonerato nello storico
+    gestisciFineStagione(true);
 }
 function aggiungiPagamento(){const v=Number(document.getElementById('offertaPagamento').value)||0; importoPagato=Math.min(importoPagato+v,importoTotaleDovuto); aggiornaPagamentoUI(); document.getElementById('offertaPagamento').value='';}
 function aggiornaPagamentoUI(){document.getElementById('totalePagato').textContent=importoPagato.toLocaleString('it-IT'); document.getElementById('btnConfermaPagamento').disabled=(importoPagato<importoTotaleDovuto);}

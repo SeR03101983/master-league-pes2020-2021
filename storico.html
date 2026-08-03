@@ -24,6 +24,7 @@
         .btn-rosso { background: #e74c3c; color:white; }
         .btn-rosso:hover { background: #c0392b; }
         .btn-giallo { background: #f39c12; color:white; }
+        .btn-giallo:hover { background: #d68910; }
         .btn-storico { background: #3498db; color:white; }
         .btn-storico:hover { background: #2471a3; }
         .sezione { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -135,12 +136,12 @@ const traduzioni = {
         risultatiTrofei: "🏅 Risultati & Trofei",
         campionato: "Campionato",
         vinto: "✅ Vinto",
-        nessuno: "---",
-        coppeNazionali: "Coppe Nazionali",
-        coppeInternazionali: "Coppe Internazionali",
-        obiettivo: "Obiettivo",
-        raggiunto: "Raggiunto",
-        nonRaggiunto: "Non Raggiunto",
+        nessuno: "0",
+        coppeNazionali: "Coppe Nazionali Vinte",
+        coppeInternazionali: "Coppe Internazionali Vinte",
+        obiettivo: "Obiettivo Stagionale",
+        raggiunto: "✅ Raggiunto",
+        nonRaggiunto: "❌ Non Raggiunto",
         nessunDato: "N/D",
         confermaCancellaRiga: "Eliminare definitivamente questa stagione?",
         confermaCancellaTutto: "Sei sicuro di voler cancellare TUTTO lo storico? Azione irreversibile!"
@@ -166,12 +167,12 @@ const traduzioni = {
         risultatiTrofei: "🏅 Results & Trophies",
         campionato: "League",
         vinto: "✅ Won",
-        nessuno: "---",
-        coppeNazionali: "National Cups",
-        coppeInternazionali: "International Cups",
-        obiettivo: "Goal",
-        raggiunto: "Reached",
-        nonRaggiunto: "Not Reached",
+        nessuno: "0",
+        coppeNazionali: "National Cups Won",
+        coppeInternazionali: "International Cups Won",
+        obiettivo: "Season Goal",
+        raggiunto: "✅ Reached",
+        nonRaggiunto: "❌ Not Reached",
         nessunDato: "N/A",
         confermaCancellaRiga: "Delete this season permanently?",
         confermaCancellaTutto: "Delete ALL history? This cannot be undone!"
@@ -197,12 +198,12 @@ const traduzioni = {
         risultatiTrofei: "🏅 Resultados & Taças",
         campionato: "Campeonato",
         vinto: "✅ Venceu",
-        nessuno: "---",
+        nessuno: "0",
         coppeNazionali: "Taças Nacionais",
         coppeInternazionali: "Taças Internacionais",
         obiettivo: "Objetivo",
-        raggiunto: "Alcançado",
-        nonRaggiunto: "Não Atingido",
+        raggiunto: "✅ Alcançado",
+        nonRaggiunto: "❌ Não Atingido",
         nessunDato: "S/D",
         confermaCancellaRiga: "Apagar esta temporada?",
         confermaCancellaTutto: "Apagar TODO o histórico? Ação irreversível!"
@@ -228,12 +229,12 @@ const traduzioni = {
         risultatiTrofei: "🏅 Resultados & Trofeos",
         campionato: "Liga",
         vinto: "✅ Ganado",
-        nessuno: "---",
+        nessuno: "0",
         coppeNazionali: "Copas Nacionales",
         coppeInternazionali: "Copas Internacionales",
         obiettivo: "Objetivo",
-        raggiunto: "Cumplido",
-        nonRaggiunto: "No Cumplido",
+        raggiunto: "✅ Cumplido",
+        nonRaggiunto: "❌ No Cumplido",
         nessunDato: "N/D",
         confermaCancellaRiga: "¿Eliminar esta temporada?",
         confermaCancellaTutto: "¿Borrar TODO el historial? ¡Irreversible!"
@@ -260,51 +261,59 @@ function toggleMenuLingue() { document.getElementById('menuLingue').classList.to
 function cambiaLingua(nuovaLingua) { setLingua(nuovaLingua); aggiornaInterfacciaLingua(); toggleMenuLingue(); caricaStorico(); }
 document.addEventListener('click', e => { if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile'); });
 
-// ✅ Funzione di utilità per salvataggio file
-function salvaFileDatabase(dati, nomeFile) {
-    const contenuto = typeof dati === 'string' ? dati : JSON.stringify(dati, null, 2);
-    const blob = new Blob([contenuto], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nomeFile;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
 function ottieniAnnoStagione(num) {
     const inizio = 2019 + (num - 1);
     return `${inizio}/${String(inizio + 1).slice(-2)}`;
 }
 
-// ✅ Funzione di caricamento e visualizzazione — ORIGINALE E INVARIATA
+// ✅ FUNZIONE PRINCIPALE: LETTURA E VISUALIZZAZIONE CONTEGGI PRECISI
 function caricaStorico() {
     const t = traduzioni[getLingua()];
     const contenitore = document.getElementById('elencoStorico');
     const vuoto = document.getElementById('vuotoMessaggio');
+    
     const datiCritti = localStorage.getItem('storicoCarriera');
-    const storico = datiCritti ? decrittografa(datiCritti) : [];
+    let storico = [];
+    try {
+        storico = datiCritti ? decrittografa(datiCritti) : [];
+        if (!Array.isArray(storico)) storico = [];
+    } catch { storico = [] }
 
-    if (!storico || !storico.length) {
+    if (storico.length === 0) {
         contenitore.innerHTML = '';
         vuoto.style.display = 'block';
         return;
     }
     vuoto.style.display = 'none';
 
-    storico.sort((a,b) => b.numStagione - a.numStagione);
+    storico.sort((a, b) => (b.numStagione || 0) - (a.numStagione || 0));
 
     contenitore.innerHTML = '';
     storico.forEach((rec, idx) => {
+        // Valori base
+        const iniziali = rec.iniziali || {ambiente: '-', dirigenza: '-', progetto: '-'};
+        const finali = rec.finali || {ambiente: '-', dirigenza: '-', progetto: '-'};
+        const numStagione = rec.numStagione || idx + 1;
+        const anno = rec.anno || ottieniAnnoStagione(numStagione);
+        const nome = rec.nomeAllenatore || 'N/D';
+        const esonerato = !!rec.esonerato;
+        const campionato = !!rec.campionato;
+
+        // ✅ CONTEGGIO PRECISO COPPE: numero volte che è stato cliccato il pulsante
+        const coppeNaz = rec.coppeNazionali || 0;
+        const coppeInt = rec.coppeInternazionali || 0;
+
+        // ✅ OBIETTIVO: mostra esattamente Raggiunto / Non Raggiunto
+        const obiettivo = rec.obiettivoRaggiunto === true ? t.raggiunto : 
+                         rec.obiettivoRaggiunto === false ? t.nonRaggiunto : t.nessunDato;
+
         contenitore.innerHTML += `
         <div class="riga-stagione">
             <div class="testata">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <span class="badge-stagione">${t.stagione} ${rec.numStagione} - ${rec.anno}</span>
-                    <span class="badge-allenatore">${t.allenatore}: ${rec.nomeAllenatore}</span>
-                    ${rec.esonerato ? `<span class="badge-esonerato">${t.esonerato}</span>` : ''}
+                    <span class="badge-stagione">${t.stagione} ${numStagione} - ${anno}</span>
+                    <span class="badge-allenatore">${t.allenatore}: ${nome}</span>
+                    ${esonerato ? `<span class="badge-esonerato">${t.esonerato}</span>` : ''}
                 </div>
                 <button class="btn-giallo" onclick="cancellaRiga(${idx})">${t.elimina}</button>
             </div>
@@ -313,27 +322,27 @@ function caricaStorico() {
                 <div class="blocco">
                     <h4>${t.parametriIniziali}</h4>
                     <div class="parametri">
-                        <div class="param"><div class="titolo">${t.ambiente}</div><div class="val">${rec.iniziali?.ambiente ?? '-'}</div></div>
-                        <div class="param"><div class="titolo">${t.dirigenza}</div><div class="val">${rec.iniziali?.dirigenza ?? '-'}</div></div>
-                        <div class="param"><div class="titolo">${t.progetto}</div><div class="val">${rec.iniziali?.progetto ?? '-'}</div></div>
+                        <div class="param"><div class="titolo">${t.ambiente}</div><div class="val">${iniziali.ambiente}</div></div>
+                        <div class="param"><div class="titolo">${t.dirigenza}</div><div class="val">${iniziali.dirigenza}</div></div>
+                        <div class="param"><div class="titolo">${t.progetto}</div><div class="val">${iniziali.progetto}</div></div>
                     </div>
                 </div>
 
                 <div class="blocco">
                     <h4>${t.parametriFinali}</h4>
                     <div class="parametri">
-                        <div class="param"><div class="titolo">${t.ambiente}</div><div class="val">${rec.finali?.ambiente ?? '-'}</div></div>
-                        <div class="param"><div class="titolo">${t.dirigenza}</div><div class="val">${rec.finali?.dirigenza ?? '-'}</div></div>
-                        <div class="param"><div class="titolo">${t.progetto}</div><div class="val">${rec.finali?.progetto ?? '-'}</div></div>
+                        <div class="param"><div class="titolo">${t.ambiente}</div><div class="val">${finali.ambiente}</div></div>
+                        <div class="param"><div class="titolo">${t.dirigenza}</div><div class="val">${finali.dirigenza}</div></div>
+                        <div class="param"><div class="titolo">${t.progetto}</div><div class="val">${finali.progetto}</div></div>
                     </div>
                 </div>
 
                 <div class="blocco">
                     <h4>${t.risultatiTrofei}</h4>
-                    <div class="titolo">${t.campionato}: <span class="val">${rec.campionato ? t.vinto : t.nessuno}</span></div>
-                    <div class="titolo">${t.coppeNazionali}: <span class="val">${rec.coppeNazionali || 0}</span></div>
-                    <div class="titolo">${t.coppeInternazionali}: <span class="val">${rec.coppeInternazionali || 0}</span></div>
-                    <div class="titolo">${t.obiettivo}: <span class="val">${rec.obiettivo === 'Raggiunto' || rec.obiettivo === 'Cumplido' || rec.obiettivo === 'Alcançado' ? t.raggiunto : rec.obiettivo === 'Non Raggiunto' || rec.obiettivo === 'No Cumplido' || rec.obiettivo === 'Não Atingido' ? t.nonRaggiunto : t.nessunDato}</span></div>
+                    <div class="titolo">${t.campionato}: <span class="val">${campionato ? t.vinto : t.nessuno}</span></div>
+                    <div class="titolo">${t.coppeNazionali}: <span class="val">${coppeNaz}</span></div>
+                    <div class="titolo">${t.coppeInternazionali}: <span class="val">${coppeInt}</span></div>
+                    <div class="titolo">${t.obiettivo}: <span class="val">${obiettivo}</span></div>
                 </div>
             </div>
         </div>`;
@@ -345,6 +354,7 @@ function cancellaRiga(indice) {
     if (!confirm(t.confermaCancellaRiga)) return;
     const datiCritti = localStorage.getItem('storicoCarriera');
     let storico = datiCritti ? decrittografa(datiCritti) : [];
+    if (!Array.isArray(storico)) storico = [];
     storico.splice(indice, 1);
     localStorage.setItem('storicoCarriera', crittografa(storico));
     caricaStorico();
@@ -363,3 +373,4 @@ window.onload = function() {
 };
 </script>
 </body>
+</html>

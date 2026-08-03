@@ -26,7 +26,6 @@
         .card-allenatore { background: #fff; border-radius: 8px; padding: 20px; border-top: 4px solid #2980b9; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .nascosto { display: none !important; }
         .foto-contratto { max-width: 100%; height: auto; border-radius: 8px; border: 3px solid #2980b9; margin: 15px 0; display: block; }
-        /* ✅ STILE PER ALLENATORE BLOCCATO */
         .foto-offuscata { filter: blur(8px) grayscale(70%); pointer-events: none; }
         .dati-nascosti { display: none !important; }
         .info-tattica { background: #f8f9fa; border: 1px dashed #aaa; border-radius: 6px; padding: 10px; margin-top: 10px; color: #666; font-style: italic; }
@@ -35,6 +34,8 @@
         .stato-trattativa { background: #fff3cd; color: #d39e00; }
         .stato-bloccato { background: #fdecea; color: #c0392b; }
         .btn-indietro { background: #27ae60; }
+        .btn-verde { background: #22c55e; }
+        .btn-verde:hover { background: #16a34a; }
         .btn-giallo { background: #f39c12; }
         .btn-giallo:hover { background: #d68910; }
         .btn-rosso { background: #e74c3c; }
@@ -43,20 +44,12 @@
         .btn-ingaggiato:hover { background: #7d3c98; }
         .info-file { font-size: 0.9em; color: #2c3e50; background: #eaf2f8; padding: 10px; border-radius: 6px; margin: 10px 0; }
         .badge-protezione { margin-left: 8px; font-weight: bold; }
-
-        /* ✅ STILE SELETTORE LINGUA */
         .contenitore-lingua { position: relative; display: inline-block; margin-left: auto; }
-        .btn-lingua {
-            background: #34495e; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
-        }
+        .btn-lingua { background: #34495e; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .btn-lingua:hover { background: #2c3e50; }
-        .menu-lingue {
-            display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 4px;
-        }
+        .menu-lingue { display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 4px; }
         .menu-lingue.visibile { display: block; }
-        .voce-lingua {
-            padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;
-        }
+        .voce-lingua { padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
         .voce-lingua:hover { background: #f0f4f8; }
         .bandiera { width: 24px; height: 16px; border-radius: 2px; object-fit: cover; }
     </style>
@@ -66,13 +59,15 @@
 <div class="barra-comandi">
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn-indietro" onclick="window.location.href='master-base.html'" data-i18n="tornaHome">🏠 Torna alla Home</button>
-        <button class="btn-giallo" onclick="document.getElementById('fileInput').click()" data-i18n="caricaLista">📂 Carica Lista Allenatori</button>
+        <!-- ✅ NUOVO PULSANTE: Ricarica da GitHub -->
+        <button class="btn-verde" onclick="caricaDatabaseAutomatico()">🔄 Carica Database da GitHub</button>
+        <!-- Il pulsante carica file locale è ancora disponibile se serve, ma non è più obbligatorio -->
+        <button class="btn-giallo" onclick="document.getElementById('fileInput').click()">📁 Carica File dal Telefono</button>
         <button class="btn-ingaggiato" onclick="window.location.href='allenatore-ingaggiato.html'" data-i18n="allenatoreIngaggiato">🏆 Allenatore Ingaggiato</button>
-        <button class="btn-rosso" onclick="eliminaListaCompleta()" data-i18n="eliminaLista">🗑️ Elimina Lista Allenatori</button>
+        <button class="btn-rosso" onclick="eliminaListaCompleta()" data-i18n="eliminaLista">🗑️ Elimina Dati</button>
         <input type="file" id="fileInput" accept=".json" style="display:none" onchange="caricaLista(event)">
     </div>
 
-    <!-- ✅ SELETTORE LINGUA -->
     <div class="contenitore-lingua">
         <button class="btn-lingua" onclick="toggleMenuLingue()">
             <span id="bandieraAttuale">🇮🇹</span>
@@ -88,13 +83,13 @@
 </div>
 
 <div class="info-file">
-📄 <strong data-i18n="stato">Stato:</strong> <span id="statoPagina">Caricamento database in corso...</span>
+📄 <strong>Stato:</strong> <span id="statoPagina">🚀 Caricamento automatico dal server in corso...</span>
 </div>
 
 <div class="sezione">
-    <h2 data-i18n="elenco">📋 Elenco Allenatori</h2>
+    <h2>📋 Elenco Allenatori</h2>
     <div id="elencoAllenatori" class="lista-allenatori"></div>
-    <p id="vuoto" class="nascosto" style="text-align:center; color:#777; padding:30px;">Nessun allenatore presente nella lista caricata</p>
+    <p id="vuoto" class="nascosto" style="text-align:center; color:#777; padding:30px;">Nessun allenatore presente</p>
 </div>
 
 <script>
@@ -116,163 +111,13 @@ function decrittografa(stringaCritta) {
     }
 }
 
-// ✅ DIZIONARIO MULTILINGUA
 const traduzioni = {
-    it: {
-        scegliLingua: "Scegli la lingua",
-        tornaHome: "🏠 Torna alla Home",
-        caricaLista: "📂 Carica Lista Allenatori",
-        aggiungiAllenatore: "➕ Aggiungi Allenatore",
-        allenatoreIngaggiato: "🏆 Allenatore Ingaggiato",
-        eliminaLista: "🗑️ Elimina Lista Allenatori",
-        stato: "Stato",
-        nessunaLista: "Nessuna lista caricata. Clicca 'Carica Lista Allenatori' per selezionare il file.",
-        elenco: "📋 Elenco Allenatori",
-        nessunElemento: "Nessun allenatore presente nella lista caricata",
-        senzaNome: "Senza Nome",
-        filosofia: "Filosofia",
-        ranking: "Ranking",
-        forzaMinima: "Forza Minima",
-        ambiente: "Ambiente",
-        dirigenza: "Dirigenza",
-        progetto: "Progetto",
-        bonus: "Bonus",
-        ingaggio: "Ingaggio",
-        tattica: "📋 Tattica: Visibile dopo ingaggio",
-        disponibile: "Disponibile",
-        bloccato: "Bloccato",
-        inTrattativa: "In Trattativa",
-        sblocca: "🔓 Sblocca Allenatore",
-        elimina: "🗑️ Elimina",
-        confermaElimina: "Eliminare ",
-        confermaEliminaLista: "⚠️ Sei sicuro di voler ELIMINARE TUTTA la lista e la memoria sblocchi?",
-        listaEliminata: "🗑️ Lista eliminata.",
-        listaAggiornata: "Lista aggiornata: ",
-        elementi: " elementi",
-        pwTitolo: "🔒 ALLENATORE BLOCCATO",
-        pwMessaggio: "Inserisci password per sbloccarlo PER SEMPRE:",
-        pwSuccesso: "✅ Sbloccato con successo!",
-        pwErrore: "❌ Password ERRATA!",
-        fileNonValido: "❌ File non valido o danneggiato!",
-        listaCaricata: "Lista caricata: "
-    },
-    en: {
-        scegliLingua: "Choose Language",
-        tornaHome: "🏠 Back to Home",
-        caricaLista: "📂 Load Coaches List",
-        aggiungiAllenatore: "➕ Add Coach",
-        allenatoreIngaggiato: "🏆 Hired Coach",
-        eliminaLista: "🗑️ Delete List",
-        stato: "Status",
-        nessunaLista: "No list loaded. Click 'Load Coaches List' to select file.",
-        elenco: "📋 Coaches List",
-        nessunElemento: "No coaches in the loaded list",
-        senzaNome: "No Name",
-        filosofia: "Philosophy",
-        ranking: "Ranking",
-        forzaMinima: "Min Strength",
-        ambiente: "Environment",
-        dirigenza: "Management",
-        progetto: "Project",
-        bonus: "Bonus",
-        ingaggio: "Salary",
-        tattica: "📋 Tactics: Visible after hiring",
-        disponibile: "Available",
-        bloccato: "Locked",
-        inTrattativa: "In Negotiation",
-        sblocca: "🔓 Unlock Coach",
-        elimina: "🗑️ Delete",
-        confermaElimina: "Delete ",
-        confermaEliminaLista: "⚠️ Are you sure to delete the FULL list and unlock history?",
-        listaEliminata: "🗑️ List deleted.",
-        listaAggiornata: "List updated: ",
-        elementi: " items",
-        pwTitolo: "🔒 COACH LOCKED",
-        pwMessaggio: "Enter password to unlock FOREVER:",
-        pwSuccesso: "✅ Unlocked successfully!",
-        pwErrore: "❌ WRONG Password!",
-        fileNonValido: "❌ Invalid or corrupted file!",
-        listaCaricata: "List loaded: "
-    },
-    pt: {
-        scegliLingua: "Escolher Idioma",
-        tornaHome: "🏠 Início",
-        caricaLista: "📂 Carregar Lista",
-        aggiungiAllenatore: "➕ Adicionar",
-        allenatoreIngaggiato: "🏆 Contratado",
-        eliminaLista: "🗑️ Excluir Lista",
-        stato: "Estado",
-        nessunaLista: "Sem lista. Clique 'Carregar Lista'.",
-        elenco: "📋 Lista Treinadores",
-        nessunElemento: "Nenhum treinador",
-        senzaNome: "Sem Nome",
-        filosofia: "Filosofia",
-        ranking: "Classificação",
-        forzaMinima: "Força Mín.",
-        ambiente: "Ambiente",
-        dirigenza: "Direção",
-        progetto: "Projeto",
-        bonus: "Bônus",
-        ingaggio: "Salário",
-        tattica: "📋 Tática: Visível após contratação",
-        disponibile: "Disponível",
-        bloccato: "Bloqueado",
-        inTrattativa: "Em Negociação",
-        sblocca: "🔓 Desbloquear",
-        elimina: "🗑️ Excluir",
-        confermaElimina: "Excluir ",
-        confermaEliminaLista: "⚠️ Confirma exclusão TOTAL?",
-        listaEliminata: "🗑️ Lista excluída.",
-        listaAggiornata: "Lista atualizada: ",
-        elementi: " itens",
-        pwTitolo: "🔒 BLOQUEADO",
-        pwMessaggio: "Senha para desbloquear:",
-        pwSuccesso: "✅ Desbloqueado!",
-        pwErrore: "❌ SENHA INCORRETA!",
-        fileNonValido: "❌ Arquivo inválido!",
-        listaCaricata: "Lista carregada: "
-    },
-    es: {
-        scegliLingua: "Elegir Idioma",
-        tornaHome: "🏠 Inicio",
-        caricaLista: "📂 Cargar Lista",
-        aggiungiAllenatore: "➕ Añadir",
-        allenatoreIngaggiato: "🏆 Contratado",
-        eliminaLista: "🗑️ Borrar Lista",
-        stato: "Estado",
-        nessunaLista: "Sin lista. Pulsa 'Cargar Lista'.",
-        elenco: "📋 Lista Entrenadores",
-        nessunElemento: "Sin entrenadores",
-        senzaNome: "Sin Nombre",
-        filosofia: "Filosofía",
-        ranking: "Ranking",
-        forzaMinima: "Fuerza Mín.",
-        ambiente: "Entorno",
-        dirigenza: "Dirección",
-        progetto: "Proyecto",
-        bonus: "Bono",
-        ingaggio: "Salario",
-        tattica: "📋 Táctica: Tras contratación",
-        disponibile: "Disponible",
-        bloccato: "Bloqueado",
-        inTrattativa: "En Negociación",
-        sblocca: "🔓 Desbloquear",
-        elimina: "🗑️ Borrar",
-        confermaElimina: "¿Borrar ",
-        confermaEliminaLista: "⚠️ ¿Borrar LISTA COMPLETA?",
-        listaEliminata: "🗑️ Lista borrada.",
-        listaAggiornata: "Lista actualizada: ",
-        elementi: " elementos",
-        pwTitolo: "🔒 BLOQUEADO",
-        pwMessaggio: "Contraseña para desbloquear:",
-        pwSuccesso: "✅ ¡Desbloqueado!",
-        pwErrore: "❌ ¡CONTRASEÑA INCORRECTA!",
-        fileNonValido: "❌ Archivo no válido!",
-        listaCaricata: "Lista cargada: "
-    }
+    it: { scegliLingua: "Scegli la lingua", tornaHome: "🏠 Torna alla Home", caricaLista: "📁 Carica File dal Telefono", allenatoreIngaggiato: "🏆 Allenatore Ingaggiato", eliminaLista: "🗑️ Elimina Dati" },
+    en: { scegliLingua: "Choose Language", tornaHome: "🏠 Back to Home", caricaLista: "📁 Load from Phone", allenatoreIngaggiato: "🏆 Hired Coach", eliminaLista: "🗑️ Delete Data" },
+    pt: { scegliLingua: "Escolher Idioma", tornaHome: "🏠 Início", caricaLista: "📁 Carregar do Telefone", allenatoreIngaggiato: "🏆 Contratado", eliminaLista: "🗑️ Excluir" },
+    es: { scegliLingua: "Elegir Idioma", tornaHome: "🏠 Inicio", caricaLista: "📁 Cargar del Teléfono", allenatoreIngaggiato: "🏆 Contratado", eliminaLista: "🗑️ Borrar" }
 };
 
-// ✅ GESTIONE LINGUA
 function getLingua() { return localStorage.getItem('linguaScelta') || 'it'; }
 function setLingua(l) { localStorage.setItem('linguaScelta', l); }
 
@@ -288,100 +133,82 @@ function aggiornaInterfacciaLingua() {
 }
 
 function toggleMenuLingue() { document.getElementById('menuLingue').classList.toggle('visibile'); }
-function cambiaLingua(nuovaLingua) {
-    setLingua(nuovaLingua);
-    aggiornaInterfacciaLingua();
-    toggleMenuLingue();
-    mostraElenco(datiListaCorrente || []);
-}
-document.addEventListener('click', e => {
-    if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile');
-});
+function cambiaLingua(nuovaLingua) { setLingua(nuovaLingua); aggiornaInterfacciaLingua(); toggleMenuLingue(); mostraElenco(datiListaCorrente || []); }
+document.addEventListener('click', e => { if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile'); });
 
-// ✅ SALVA SBLOCCHI
 function salvaStatoSblocco(indice, sbloccato) {
     let stati = JSON.parse(localStorage.getItem('statiSbloccoPermanenti') || '{}');
     stati[indice] = sbloccato;
     localStorage.setItem('statiSbloccoPermanenti', JSON.stringify(stati));
 }
 
-// ✅ CARICAMENTO IMMAGINE
 async function caricaImmagineProtetta(percorso, idElemento, datiImmagineBase64 = null) {
     const elemImg = document.getElementById(idElemento);
-    if (datiImmagineBase64) {
-        elemImg.src = datiImmagineBase64;
-        elemImg.style.display = "block";
-        return;
-    }
+    if (datiImmagineBase64) { elemImg.src = datiImmagineBase64; elemImg.style.display = "block"; return; }
     try {
         const risposta = await fetch(percorso);
-        if (!risposta.ok) throw new Error("File non trovato");
+        if (!risposta.ok) throw new Error("Immagine non trovata");
         const datiCritti = await risposta.text();
         const base64 = decrittografa(datiCritti);
         if (!base64) throw new Error("Decrittografia fallita");
         elemImg.src = base64;
         elemImg.style.display = "block";
-    } catch (errore) {
-        console.warn("Immagine non disponibile:", errore);
-        elemImg.alt = "🔒 Immagine protetta";
-    }
+    } catch (errore) { elemImg.alt = "🔒 Immagine protetta"; }
 }
 
 let datiListaCorrente = [];
 
-// ✅ CARICAMENTO AUTOMATICO DAL SERVER
-function caricaDatabaseAutomatico() {
-    // 👉 PERCORSO SEMPLIFICATO E SICURO
+// ✅ FUNZIONE PRINCIPALE: PRENDE IL FILE DA GITHUB
+async function caricaDatabaseAutomatico() {
+    const statoPagina = document.getElementById('statoPagina');
+    statoPagina.textContent = "🔄 Connessione al server GitHub...";
+
+    // ✅ PERCORSO ASSOLUTO E SICURO PER GITHUB PAGES
     const percorsoFile = "./database/default.json";
 
-    fetch(percorsoFile)
-    .then(risposta => {
-        if (!risposta.ok) throw new Error("File non trovato: " + risposta.status);
-        return risposta.text();
-    })
-    .then(datiCritti => {
+    try {
+        const risposta = await fetch(percorsoFile, { cache: "no-store" });
+        if (!risposta.ok) throw new Error("File non raggiungibile (" + risposta.status + ")");
+
+        const datiCritti = await risposta.text();
         const listaDalFile = decrittografa(datiCritti);
-        if (!listaDalFile) throw new Error("File non valido o crittografia errata");
+        if (!listaDalFile) throw new Error("File danneggiato o password master errata");
 
-        // Ripristina sblocchi esistenti
+        // Ripristina sblocchi personali
         const mieiSblocchi = JSON.parse(localStorage.getItem('statiSbloccoPermanenti') || '{}');
-        listaDalFile.forEach((a,i) => { if (mieiSblocchi[i] === true) a.sbloccato = true; });
+        listaDalFile.forEach((a, i) => { if (mieiSblocchi[i]) a.sbloccato = true; });
 
+        // Salva TUTTO nel telefono in modo permanente
         localStorage.setItem('elencoCompletoAllenatori', crittografa(listaDalFile));
         localStorage.setItem('listaLavoro', crittografa(listaDalFile));
         datiListaCorrente = listaDalFile;
 
-        document.getElementById('statoPagina').textContent = "✅ Database caricato automatico: " + listaDalFile.length + " elementi";
+        statoPagina.textContent = "✅ PRONTO: Lista caricata e salvata nel telefono (" + listaDalFile.length + " allenatori)";
         mostraElenco(listaDalFile);
-    })
-    .catch(errore => {
-        console.error("ERRORE CARICAMENTO:", errore);
-        document.getElementById('statoPagina').textContent = "⚠️ Database non caricato in automatico: " + errore.message + ". Usa il pulsante 'Carica Lista'";
-    });
+
+    } catch (errore) {
+        statoPagina.textContent = "❌ ERRORE: " + errore.message + ". Controlla la connessione o riprova.";
+        console.error(errore);
+    }
 }
 
-// ✅ CARICA LISTA MANUALE
+// ✅ CARICA MANUALE DA FILE (se serve in futuro)
 function caricaLista(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
         const listaDalFile = decrittografa(e.target.result);
-        if (!listaDalFile) { alert("❌ File non valido o danneggiato!"); return; }
-
-        const mieiSblocchi = JSON.parse(localStorage.getItem('statiSbloccoPermanenti') || '{}');
-        listaDalFile.forEach((a,i) => { if (mieiSblocchi[i] === true) a.sbloccato = true; });
-
-        localStorage.setItem('elencoCompletoAllenatori', crittografa(listaDalFile));
+        if (!listaDalFile) { alert("❌ File non valido!"); return; }
         localStorage.setItem('listaLavoro', crittografa(listaDalFile));
+        localStorage.setItem('elencoCompletoAllenatori', crittografa(listaDalFile));
         datiListaCorrente = listaDalFile;
-        document.getElementById('statoPagina').textContent = "✅ Lista caricata: " + listaDalFile.length + " elementi";
+        document.getElementById('statoPagina').textContent = "✅ File caricato: " + listaDalFile.length + " elementi";
         mostraElenco(listaDalFile);
     };
     reader.readAsText(file);
 }
 
-// ✅ MOSTRA ELENCO
 function mostraElenco(lista) {
     const contenitore = document.getElementById('elencoAllenatori');
     const messaggioVuoto = document.getElementById('vuoto');
@@ -394,91 +221,71 @@ function mostraElenco(lista) {
     lista.forEach((allenatore, indice) => {
         const card = document.createElement('div');
         card.className = 'card-allenatore';
-        let classeStato = 'stato-disponibile', testoStato = 'Disponibile';
-        if (allenatore.statoTrattativa === 'bloccato') { classeStato = 'stato-bloccato'; testoStato = 'Bloccato'; }
-        else if (allenatore.statoTrattativa === 'trattativa') { classeStato = 'stato-trattativa'; testoStato = 'In Trattativa'; }
-
         const isBloccato = allenatore.protetto && !allenatore.sbloccato;
-        let badgeProtezione = isBloccato ? `<span class="badge-protezione stato stato-bloccato">🔒 Bloccato</span>` : '';
-        const classeImmagine = isBloccato ? 'foto-contratto foto-offuscata' : 'foto-contratto';
-        const classeDati = isBloccato ? 'dati-nascosti' : '';
         const idImg = `foto_${indice}_${allenatore.nome.replace(/\s/g,'_')}`;
         const percorsoImmagine = `_immagini_protette/${(allenatore.nomeFileFoto || allenatore.nome.replace(/\s/g,'_'))}.dat`;
 
         card.innerHTML = `
-            <h3>${allenatore.nome || 'Senza Nome'} ${badgeProtezione}</h3>
+            <h3>${allenatore.nome || 'Senza Nome'} ${isBloccato ? '<span class="badge-protezione stato stato-bloccato">🔒</span>' : ''}</h3>
             <p><strong>Filosofia:</strong> ${allenatore.filosofia || '-'}</p>
-            <div class="${classeDati}">
+            <div class="${isBloccato ? 'dati-nascosti' : ''}">
                 <p><strong>Ranking:</strong> ${allenatore.ranking || '-'}</p>
-                <p><strong>Forza Minima:</strong> ${allenatore.forzaMinima || 3}</p>
                 <p><strong>Ambiente:</strong> ${allenatore.ambiente || 5} | <strong>Dirigenza:</strong> ${allenatore.dirigenza || 5} | <strong>Progetto:</strong> ${allenatore.progetto || 5}</p>
                 <p><strong>Bonus:</strong> €${allenatore.bonus || 0} | <strong>Ingaggio:</strong> €${allenatore.ingaggio || 0}</p>
             </div>
-            <img id="${idImg}" class="${classeImmagine}" alt="Contratto" style="display:none;">
-            <div class="info-tattica ${classeDati}">📋 Tattica: Visibile dopo ingaggio</div>
-            <span class="stato ${classeStato}">${testoStato}</span><br><br>
-            <button id="btnSblocca_${indice}" onclick="sbloccaAllenatore(${indice})" style="margin-right: 8px;" ${!isBloccato ? 'disabled' : ''}>🔓 Sblocca</button>
-            <button class="btn-rosso" onclick="eliminaElemento('${allenatore.nome}')">🗑️ Elimina</button>
+            <img id="${idImg}" class="${isBloccato ? 'foto-contratto foto-offuscata' : 'foto-contratto'}" alt="Contratto" style="display:none;">
+            <span class="stato ${allenatore.protetto && !allenatore.sbloccato ? 'stato-bloccato' : 'stato-disponibile'}">
+                ${allenatore.protetto && !allenatore.sbloccato ? '🔒 Bloccato' : '✅ Disponibile'}
+            </span><br><br>
+            <button onclick="sbloccaAllenatore(${indice})" ${!isBloccato ? 'disabled' : ''}>🔓 Sblocca</button>
         `;
         contenitore.appendChild(card);
         if (allenatore.foto) caricaImmagineProtetta(percorsoImmagine, idImg, allenatore.foto);
     });
 }
 
-// ✅ SBLOCCO
 function sbloccaAllenatore(indice) {
-    const listaCritta = localStorage.getItem('listaLavoro') || localStorage.getItem('elencoCompletoAllenatori');
+    const listaCritta = localStorage.getItem('listaLavoro');
     const lista = decrittografa(listaCritta) || [];
     const allenatore = lista[indice];
-
-    const pw = prompt(`🔒 ALLENATORE BLOCCATO\nInserisci password per sbloccarlo PER SEMPRE:`);
-    if (pw === null) return;
+    const pw = prompt("🔒 Inserisci password per sbloccare:");
+    if (!pw) return;
 
     if (btoa(pw.trim()) === allenatore.passwordHash) {
         allenatore.sbloccato = true;
         salvaStatoSblocco(indice, true);
         localStorage.setItem('listaLavoro', crittografa(lista));
-        localStorage.setItem('elencoCompletoAllenatori', crittografa(lista));
-        alert("✅ Sbloccato con successo!");
+        alert("✅ Sbloccato!");
         mostraElenco(lista);
     } else {
-        alert("❌ Password ERRATA!");
+        alert("❌ Password errata!");
     }
 }
 
-// ✅ ELIMINA LISTA COMPLETA
 function eliminaListaCompleta() {
-    if (!confirm("⚠️ Sei sicuro di voler ELIMINARE TUTTA la lista e la memoria sblocchi?")) return;
+    if (!confirm("⚠️ Cancellare tutti i dati dal telefono?")) return;
     localStorage.removeItem('listaLavoro');
     localStorage.removeItem('elencoCompletoAllenatori');
     localStorage.removeItem('statiSbloccoPermanenti');
     document.getElementById('elencoAllenatori').innerHTML = '';
-    document.getElementById('statoPagina').textContent = "🗑️ Lista eliminata.";
+    document.getElementById('statoPagina').textContent = "🗑️ Dati cancellati. Premi 'Carica Database' per ricaricare.";
     document.getElementById('vuoto').classList.remove('nascosto');
 }
 
-// ✅ ELIMINA SINGOLO
-function eliminaElemento(nome) {
-    if (!confirm("Eliminare " + nome + "?")) return;
-    let lista = decrittografa(localStorage.getItem('listaLavoro')) || [];
-    lista = lista.filter(a => a.nome !== nome);
-    localStorage.setItem('listaLavoro', crittografa(lista));
-    mostraElenco(lista);
-    document.getElementById('statoPagina').textContent = "Lista aggiornata: " + lista.length + " elementi";
-}
-
-// ✅ CARICAMENTO INIZIALE
+// ✅ AVVIO AUTOMATICO
 window.onload = function() {
     aggiornaInterfacciaLingua();
-    caricaDatabaseAutomatico(); // Prova automatico
-    // Se esiste già in locale, la mostra
+    // Se il telefono ha già una copia, la mostra subito
     const salvata = localStorage.getItem('listaLavoro');
     if (salvata) {
         const lista = decrittografa(salvata);
         if (lista) {
-            document.getElementById('statoPagina').textContent = "✅ Lista locale: " + lista.length + " elementi";
+            document.getElementById('statoPagina').textContent = "📱 Dati presenti sul telefono (" + lista.length + " elementi)";
             mostraElenco(lista);
         }
+    } else {
+        // Altrimenti scarica SUBITO da GitHub
+        caricaDatabaseAutomatico();
     }
 };
 </script>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MasterLeague">
+<link rel="apple-touch-icon" href="icone/icona-192x192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="titolo">Allenatore Ingaggiato</title>
+    <!-- ✅ LIBRERIA CRITTOGRAFIA -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; margin: 0; padding: 0; }
+        body { background: #f0f4f8; padding: 20px; max-width: 1400px; margin: auto; }
+        h1, h2, h3 { color: #2c3e50; margin-bottom: 15px; }
+        .sezione { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        button { padding: 12px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .barra-superiore { background: #27ae60; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
+        .barra-comandi { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; position: sticky; top:10px; z-index:100; }
+        .btn-verde { background: #27ae60; color: white; }
+        .btn-verde:hover { background: #229954; }
+        .btn-blu { background: #2980b9; color: white; }
+        .btn-blu:hover { background: #1a5276; }
+        .btn-giallo { background: #f39c12; color: white; }
+        .btn-giallo:hover { background: #d68910; }
+        .btn-rosso { background: #e74c3c; color: white; }
+        .btn-rosso:hover { background: #c0392b; }
+        .btn-viola { background: #8e44ad; color: white; }
+        .btn-viola:hover { background: #7d3c98; }
+        .btn-turchese { background: #16a085; color: white; }
+        .btn-turchese:hover { background: #138d75; }
+        .card { background: #fff; border-radius: 8px; padding: 25px; border-top: 4px solid #8e44ad; }
+        .foto { max-width: 100%; border-radius: 8px; border: 3px solid #2980b9; margin: 10px 0; display: block; min-height: 100px; background: #f8f9fa; }
+        .riga { margin: 8px 0; padding: 6px 0; border-bottom: 1px solid #eee; }
+        .etichetta { font-weight: bold; display: inline-block; width: 200px; }
+        .valore { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
+        .vuoto { text-align: center; padding: 50px; color: #777; }
+        .sezione-parametri { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #8e44ad; }
+        .griglia-pulsanti { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
+        .griglia-eventi { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 20px 0; }
+        .storico { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-top: 20px; max-height: 250px; overflow-y: auto; }
+        .riga-partita { padding: 8px 0; border-bottom: 1px solid #ddd; font-size: 14px; }
+        .titolo-sezione { color: #8e44ad; margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .avvertenza { background: #fff3cd; border: 2px solid #f39c12; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: center; font-weight: bold; color: #856404; }
+        .modale { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modale-contenuto { background: white; border-radius: 12px; padding: 30px; max-width: 550px; width: 90%; box-shadow: 0 5px 25px rgba(0,0,0,0.3); text-align: center; }
+        .modale-titolo { color: #c0392b; margin-bottom: 20px; font-size: 1.5em; }
+        .evidenza-ingaggio { font-size: 1.3em; font-weight: bold; color: #2c3e50; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .nascosto { display: none !important; }
+        .stagione-badge { background: #27ae60; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
+
+        /* ✅ SELETTORE LINGUA */
+        .contenitore-lingua { position: relative; display: inline-block; }
+        .btn-lingua {
+            background: #34495e; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-lingua:hover { background: #2c3e50; }
+        .menu-lingue {
+            display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 4px;
+        }
+        .menu-lingue.visibile { display: block; }
+        .voce-lingua {
+            padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;
+        }
+        .voce-lingua:hover { background: #f0f4f8; }
+        .bandiera { width: 24px; height: 16px; border-radius: 2px; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<div class="barra-comandi">
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-verde" onclick="window.location.href='trattative.html'" data-i18n="tornaTrattative">🔙 Torna a Trattative</button>
+        <button class="btn-giallo" onclick="azzeraStoricoERipristina()" data-i18n="resetPartite">🔄 Resetta Partite</button>
+        <button class="btn-turchese" onclick="gestisciFineStagione(false)" data-i18n="fineStagione">📅 Fine Stagione</button>
+        <button class="btn-rosso" onclick="apriModalePagamento()" data-i18n="esonerato">🚫 Esonera Allenatore</button>
+    </div>
+    <!-- ✅ SELETTORE LINGUA -->
+    <div class="contenitore-lingua">
+        <button class="btn-lingua" onclick="toggleMenuLingue()">
+            <span id="bandieraAttuale">🇮🇹</span>
+            <span data-i18n="scegliLingua">Scegli la lingua</span>
+        </button>
+        <div id="menuLingue" class="menu-lingue">
+            <div class="voce-lingua" onclick="cambiaLingua('it')">🇮🇹 Italiano</div>
+            <div class="voce-lingua" onclick="cambiaLingua('en')">🇬🇧 English</div>
+            <div class="voce-lingua" onclick="cambiaLingua('pt')">🇧🇷 Português</div>
+            <div class="voce-lingua" onclick="cambiaLingua('es')">🇪🇸 Español</div>
+        </div>
+    </div>
+</div>
+
+<div class="barra-superiore"><h2 data-i18n="titoloSezione">🏆 Dati Allenatore Ingaggiato</h2></div>
+
+<div class="sezione">
+    <div id="contenuto"></div>
+</div>
+
+<!-- Modale Pagamento Esonero -->
+<div id="modaleEsonero" class="modale nascosto">
+    <div class="modale-contenuto">
+        <h2 class="modale-titolo" data-i18n="modaleTitolo">⚠️ ALLENATORE ESONERATO</h2>
+        <p data-i18n="modaleTesto">Devi saldare l'ingaggio stagionale per completare la procedura.</p>
+        <div class="evidenza-ingaggio"><span data-i18n="importoDovuto">Importo dovuto</span>: € <span id="importoIngaggio">0</span></div>
+        
+        <div style="margin:20px 0;">
+            <input type="number" id="offertaPagamento" min="0" data-i18n-placeholder="inserisciPagamento" placeholder="Inserisci importo pagamento" style="width:100%; padding:12px; font-size:16px;">
+            <div style="margin-top:10px; font-weight:bold;">
+                <span data-i18n="pagato">Pagato</span>: € <span id="totalePagato">0</span> / € <span id="totaleDovuto">0</span>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn-giallo" onclick="aggiungiPagamento()">💳 Aggiungi Importo</button>
+            <button id="btnConfermaPagamento" class="btn-verde" onclick="confermaPagamento()" disabled>✅ <span data-i18n="pagatoTorna">Pagato e Torna</span></button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ✅ PASSWORD MASTER E FUNZIONI DI CRITTOGRAFIA SICURE
+const PASSWORD_MASTER = "LaTuaPasswordSegreta123";
+
+function crittografa(dati) {
+    return CryptoJS.AES.encrypt(JSON.stringify(dati), PASSWORD_MASTER).toString();
+}
+
+function decrittografa(stringaCritta) {
+    if (!stringaCritta || typeof stringaCritta !== 'string' || stringaCritta.trim() === '') return null;
+    try {
+        const bytes = CryptoJS.AES.decrypt(stringaCritta, PASSWORD_MASTER);
+        return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    } catch { return null; }
+}
+
+// ✅ DIZIONARIO MULTILINGUA
+const traduzioni = {
+    it: {
+        titolo: "Allenatore Ingaggiato", scegliLingua: "Scegli la lingua", tornaTrattative: "🔙 Torna a Trattative",
+        resetPartite: "🔄 Resetta Partite", fineStagione: "📅 Fine Stagione", esonerato: "🚫 Esonera Allenatore",
+        titoloSezione: "🏆 Dati Allenatore Ingaggiato", nessunDati: "Nessun allenatore caricato", vaiTrattative: "Vai a Trattative",
+        stagioneBadge: "📅 Stagione", avvertimento: "🔥 ATTENZIONE: Ambiente a 0 - Contestazione Tifosi Attiva!",
+        parametriTitolo: "📊 Parametri Attuali (0-10)", ranking: "Ranking", forzaMinima: "Forza Minima", filosofia: "Filosofia",
+        ambiente: "🏟️ Ambiente", dirigenza: "🤝 Dirigenza", progetto: "📐 Progetto Tecnico", bonus: "💰 Bonus Firma", ingaggio: "💵 Ingaggio Annuale",
+        risultatiTitolo: "⚽ Risultati Partite", vittoria: "✅ Vittoria", pareggio: "➖ Pareggio", sconfitta: "❌ Sconfitta",
+        vittoriaDerby: "🏆 Vittoria Derby", pareggioDerby: "⚖️ Pareggio Derby", sconfittaDerby: "💔 Sconfitta Derby",
+        eventiTitolo: "🏆 Eventi Speciali & Coppe", pnTurno: "📌 Passaggio Turno Coppa Nazionale", pnVittoria: "🏅 Vittoria Coppa Nazionale",
+        pnEliminato: "❌ Eliminazione Coppa Nazionale", piTurno: "📌 Passaggio Turno Coppa Internazionale", piVittoria: "🌍 Vittoria Coppa Internazionale",
+        piEliminato: "❌ Eliminazione Coppa Internazionale", campionato: "⭐ Campione", obiettivoSi: "🎯 Obiettivo Raggiunto", obiettivoNo: "📉 Obiettivo Non Raggiunto",
+        storicoTitolo: "📜 Storico Eventi", nessunEvento: "Nessun evento", documentazione: "📷 Documenti", fotoContratto: "📄 Contratto", fotoTattica: "📑 Tattica",
+        modaleTitolo: "⚠️ Esonero", modaleTesto: "Paga l'ingaggio per completare", importoDovuto: "Importo dovuto", pagato: "Pagato",
+        inserisciPagamento: "Importo", aggiungiImporto: "Aggiungi", pagatoTorna: "✅ Pagato", confermaReset: "Sicuro di azzerare tutto?",
+        stagioneConclusa: "Stagione conclusa!\nVuoi continuare con lo stesso allenatore per la prossima stagione?",
+        stagioneSalvata: "✅ Stagione salvata correttamente nell'Albo d'Oro!",
+        esoneroConferma: "L'allenatore verrà esonerato e i dati salvati nello storico."
+    },
+    en: {
+        titolo: "Hired Coach", scegliLingua: "Choose Language", tornaTrattative: "🔙 Back", resetPartite: "🔄 Reset", fineStagione: "📅 End Season", esonerato: "🚫 Fire",
+        titoloSezione: "Coach Details", nessunDati: "No coach", vaiTrattative: "Go Back", stagioneBadge: "📅 Season", avvertimento: "⚠️ WARNING: Low Environment!",
+        parametriTitolo: "📊 Parameters", ranking: "Ranking", forzaMinima: "Min Strength", filosofia: "Style", ambiente: "🏟️ Env", dirigenza: "🤝 Board", progetto: "📐 Plan",
+        bonus: "💰 Bonus", ingaggio: "💵 Salary", risultatiTitolo: "⚽ Results", vittoria: "✅ Win", pareggio: "➖ Draw", sconfitta: "❌ Loss",
+        vittoriaDerby: "🏆 Derby Win", pareggioDerby: "⚖️ Derby Draw", sconfittaDerby: "💔 Derby Loss", eventiTitolo: "🏆 Events",
+        pnTurno: "Cup Progress", pnVittoria: "Cup Winner", pnEliminato: "Cup Out", piTurno: "Euro Progress", piVittoria: "Euro Winner", piEliminato: "Euro Out",
+        campionato: "⭐ League Champ", obiettivoSi: "Goal ✓", obiettivoNo: "Goal ✗", storicoTitolo: "📜 History", nessunEvento: "Empty",
+        documentazione: "📷 Files", fotoContratto: "📄 Contract", fotoTattica: "📑 Tactics", modaleTitolo: "⚠️ Fired", modaleTesto: "Pay salary", importoDovuto: "Due", pagato: "Paid",
+        inserisciPagamento: "Amount", aggiungiImporto: "Add", pagatoTorna: "✅ Done", confermaReset: "Reset all?", stagioneConclusa: "Season end.\nKeep coach?", stagioneSalvata: "Saved to Hall of Fame!"
+    },
+    pt: {titolo:"Treinador",scegliLingua:"Idioma",tornaTrattative:"🔙 Voltar",resetPartite:"🔄 Reiniciar",fineStagione:"📅 Fim",esonerato:"🚫 Demitir",titoloSeção:"Dados",nessunDati:"Vazio",vaiTrattative:"Ir",stagioneBadge:"📅 Temporada",avvertimento:"⚠️ ALERTA!",parametriTitolo:"📊 Parâmetros",ranking:"Ranking",forzaMinima:"Força",filosofia:"Estilo",ambiente:"🏟️ Amb",dirigenza:"🤝 Diretoria",projeto:"📐 Projeto",bonus:"💰 Bônus",ingaggio:"💵 Salário",risultatiTitolo:"⚽ Resultados",vittoria:"✅ Vitória",pareggio:"➖ Empate",sconfitta:"❌ Derrota",vittoriaDerby:"🏆 Derby",pareggioDerby:"⚖️ Derby",sconfittaDerby:"💔 Derby",eventiTitolo:"🏆 Eventos",pnTurno:"Taça: Avançou",pnVittoria:"🏅 Campeão Nacional",pnEliminato:"❌ Fora",piTurno:"Internacional: Avançou",piVittoria:"🌍 Campeão",piEliminato:"❌ Fora",campionato:"⭐ Liga",obiettivoSi:"🎯 Sim",obiettivoNo:"📉 Não",storicoTitolo:"📜 Histórico",nessunEvento:"Nenhum",documentazione:"📷 Docs",fotoContratto:"📄 Contrato",fotoTattica:"📑 Tática",modaleTitolo:"⚠️ Demitido",modaleTesto:"Pague salário",importoDovuto:"Total",pagato:"Pago",inserisciPagamento:"Valor",aggiungiImporto:"Adicionar",pagatoTorna:"✅ OK",confermaReset:"Tem certeza?",stagioneConclusa:"Fim da temporada.\nManter treinador?",stagioneSalvata:"Salvo!"},
+    es: {titolo:"Entrenador",scegliLingua:"Idioma",tornaTrattative:"🔙 Volver",resetPartite:"🔄 Reiniciar",fineStagione:"📅 Fin",esonerato:"🚫 Despedir",titoloSezione:"Datos",nessunDati:"Vacío",vaiTrattative:"Ir",stagioneBadge:"📅 Temporada",avvertimento:"⚠️ ATENCIÓN!",parametriTitolo:"📊 Parámetros",ranking:"Ranking",forzaMinima:"Fuerza",filosofia:"Estilo",ambiente:"🏟️ Entorno",dirigenza:"🤝 Junta",progetto:"📐 Proyecto",bonus:"💰 Bono",ingaggio:"💵 Salario",risultatiTitolo:"⚽ Resultados",vittoria:"✅ Victoria",pareggio:"➖ Empate",sconfitta:"❌ Derrota",vittoriaDerby:"🏆 Derbi",pareggioDerby:"⚖️ Derbi",sconfittaDerby:"💔 Derbi",eventiTitolo:"🏆 Eventos",pnTurno:"Copa: Avance",pnVittoria:"🏅 Campeón",pnEliminato:"❌ Eliminado",piTurno:"Intl: Avance",piVittoria:"🌍 Campeón",piEliminato:"❌ Eliminado",campionato:"⭐ Liga",obiettivoSi:"🎯 Cumplido",obiettivoNo:"📉 No",storicoTitolo:"📜 Historial",nessunEvento:"Vacío",documentazione:"📷 Docs",fotoContratto:"📄 Contrato",fotoTattica:"📑 Táctica",modaleTitolo:"⚠️ Despedido",modaleTesto:"Pagar salario",importoDovuto:"Total",pagato:"Pagado",inserisciPagamento:"Cantidad",aggiungiImporto:"Añadir",pagatoTorna:"✅ OK",confermaReset:"¿Seguro?",stagioneConclusa:"Fin de temporada.\n¿Mantener?",stagioneSalvata:"¡Guardado!"}
+};
+
+// ✅ GESTIONE LINGUA
+function getLingua() { return localStorage.getItem('linguaScelta') || 'it'; }
+function setLingua(l) { localStorage.setItem('linguaScelta', l); }
+function aggiornaInterfacciaLingua() {
+    const l = getLingua(), t = traduzioni[l];
+    document.documentElement.lang = l;
+    document.getElementById('bandieraAttuale').textContent = {it:'🇮🇹',en:'🇬🇧',pt:'🇧🇷',es:'🇪🇸'}[l];
+    document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(t[k])el.textContent=t[k];});
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(t[k])el.placeholder=t[k];});
+}
+function toggleMenuLingue(){document.getElementById('menuLingue').classList.toggle('visibile');}
+function cambiaLingua(l){setLingua(l);aggiornaInterfacciaLingua();toggleMenuLingue();disegnaPagina();}
+document.addEventListener('click',e=>{if(!e.target.closest('.contenitore-lingua'))document.getElementById('menuLingue').classList.remove('visibile');});
+
+// ✅ VARIABILI GLOBALI
+let datiAllenatore = {}, valoriIniziali = {}, storicoPartite = [], importoTotaleDovuto=0, importoPagato=0;
+
+function ottieniAnnoStagione(n){const i=2019+(n-1);return `${i}/${String(i+1).slice(-2)}`;}
+
+// ✅ CARICAMENTO IMMAGINE SEMPLICE E PROTETTO
+function caricaImmagine(id, src){const img=document.getElementById(id);if(img&&src){img.onload=()=>{};img.onerror=()=>{img.style.display='none';};img.src=src;img.style.display='block';}}
+
+window.onload = function(){
+    aggiornaInterfacciaLingua();
+    const contenuto = document.getElementById('contenuto');
+    try {
+        const datiCritti = localStorage.getItem('allenatoreIngaggiato');
+        datiAllenatore = decrittografa(datiCritti);
+        if (!datiAllenatore) throw 'vuoto';
+
+        // Salva valori iniziali se nuovi
+        if (!datiAllenatore._iniziali) {
+            valoriIniziali = {ambiente:Number(datiAllenatore.ambiente||5),dirigenza:Number(datiAllenatore.dirigenza||5),progetto:Number(datiAllenatore.progetto||5)};
+            datiAllenatore._iniziali = true;
+            datiAllenatore._valoriIniziali = valoriIniziali;
+            salvaDati();
+        } else valoriIniziali = datiAllenatore._valoriIniziali;
+
+        // Storico
+        const stCritt = localStorage.getItem('storicoPartite');
+        storicoPartite = stCritt ? decrittografa(stCritt) : [];
+        disegnaPagina();
+    } catch(e) {
+        const t = traduzioni[getLingua()];
+        contenuto.innerHTML = `<div class="vuoto"><h3>${t.nessunDati}</h3><button class="btn-blu" onclick="window.location.href='trattative.html'">${t.vaiTrattative}</button></div>`;
+    }
+};
+
+// ✅ PAGINA PRINCIPALE - STRUTTURA FISSA E INALTERABILE
+function disegnaPagina(){
+    const t = traduzioni[getLingua()];
+    const contenuto = document.getElementById('contenuto');
+    const inContestazione = datiAllenatore.ambiente <= 0;
+    const datiSquadra = localStorage.getItem('datiSquadra') ? decrittografa(localStorage.getItem('datiSquadra')) : {};
+    const numStagione = datiSquadra.stagione || 1;
+
+    contenuto.innerHTML = `
+    <div class="card">
+        <h2 style="text-align:center; color:#8e44ad;">👤 ${datiAllenatore.nome || 'N/D'}</h2>
+        <div style="text-align:center;"><span class="stagione-badge">${t.stagioneBadge} ${numStagione} - ${ottieniAnnoStagione(numStagione)}</span></div>
+        ${inContestazione ? `<div class="avvertenza">${t.avvertimento}</div>` : ''}
+
+        <div class="sezione-parametri">
+            <h3>${t.parametriTitolo}</h3>
+            <div class="riga"><span class="etichetta">${t.ranking}:</span> <span class="valore">${datiAllenatore.ranking || '-'}</span></div>
+            <div class="riga"><span class="etichetta">${t.forzaMinima}:</span> <span class="valore">${datiAllenatore.forzaMinima || '-'}</span></div>
+            <div class="riga"><span class="etichetta">${t.filosofia}:</span> <span class="valore">${datiAllenatore.filosofia || '-'}</span></div>
+            <div class="riga"><span class="etichetta">${t.ambiente}:</span> <span class="valore">${Number(datiAllenatore.ambiente).toFixed(1)}</span></div>
+            <div class="riga"><span class="etichetta">${t.dirigenza}:</span> <span class="valore">${Number(datiAllenatore.dirigenza).toFixed(1)}</span></div>
+            <div class="riga"><span class="etichetta">${t.progetto}:</span> <span class="valore">${Number(datiAllenatore.progetto).toFixed(1)}</span></div>
+            <div class="riga"><span class="etichetta">${t.bonus}:</span> € ${Number(datiAllenatore.bonus||0).toLocaleString('it-IT')}</div>
+            <div class="riga"><span class="etichetta">${t.ingaggio}:</span> € ${Number(datiAllenatore.ingaggio||0).toLocaleString('it-IT')}</div>
+        </div>
+
+        <h3 class="titolo-sezione">${t.documentazione}</h3>
+        <h4>${t.fotoContratto}</h4>
+        <img id="imgContratto" class="foto" alt="Contratto">
+        <h4>${t.fotoTattica}</h4>
+        <img id="imgTattica" class="foto" alt="Tattica">
+
+        <h3 class="titolo-sezione">${t.risultatiTitolo}</h3>
+        <div class="griglia-pulsanti">
+            <button class="btn-verde" onclick="applicaRisultato('vittoria')">${t.vittoria}</button>
+            <button class="btn-giallo" onclick="applicaRisultato('pareggio')">${t.pareggio}</button>
+            <button class="btn-rosso" onclick="applicaRisultato('sconfitta')">${t.sconfitta}</button>
+            <button class="btn-verde" onclick="applicaRisultato('vittoria_derby')">${t.vittoriaDerby}</button>
+            <button class="btn-giallo" onclick="applicaRisultato('pareggio_derby')">${t.pareggioDerby}</button>
+            <button class="btn-rosso" onclick="applicaRisultato('sconfitta_derby')">${t.sconfittaDerby}</button>
+        </div>
+
+        <h3 class="titolo-sezione">${t.eventiTitolo}</h3>
+        <div class="griglia-eventi">
+            <button class="btn-blu" onclick="applicaEvento('pn_turno')">${t.pnTurno}</button>
+            <button class="btn-verde" onclick="applicaEvento('pn_vittoria')">${t.pnVittoria}</button>
+            <button class="btn-rosso" onclick="applicaEvento('pn_eliminato')">${t.pnEliminato}</button>
+            <button class="btn-turchese" onclick="applicaEvento('pi_turno')">${t.piTurno}</button>
+            <button class="btn-verde" onclick="applicaEvento('pi_vittoria')">${t.piVittoria}</button>
+            <button class="btn-rosso" onclick="applicaEvento('pi_eliminato')">${t.piEliminato}</button>
+            <button class="btn-viola" onclick="applicaEvento('campionato')">${t.campionato}</button>
+            <button class="btn-verde" onclick="applicaEvento('obiettivo_si')">${t.obiettivoSi}</button>
+            <button class="btn-rosso" onclick="applicaEvento('obiettivo_no')">${t.obiettivoNo}</button>
+        </div>
+
+        <div class="storico">
+            <h3>${t.storicoTitolo} (${storicoPartite.length})</h3>
+            ${storicoPartite.length === 0 ? `<p style="color:#777">${t.nessunEvento}</p>` : storicoPartite.map(p=>`<div class="riga-partita">${p.data} - ${p.testo}</div>`).join('')}
+        </div>
+    </div>`;
+
+    // ✅ CARICA IMMAGINI DOPO CREAZIONE HTML
+    if (datiAllenatore.foto) caricaImmagine('imgContratto', datiAllenatore.foto);
+    if (datiAllenatore.fotoTattica) caricaImmagine('imgTattica', datiAllenatore.fotoTattica);
+}
+
+// ✅ REGOLE RISULTATI ORIGINALI
+function applicaRisultato(tipo){
+    const t = traduzioni[getLingua()];
+    const regoleNormali = {
+        vittoria: {a:+1,d:+1,p:+0.5,t:t.vittoria},
+        pareggio: {a:0,d:0,p:+0.5,t:t.pareggio},
+        sconfitta: {a:-1,d:-1,p:-1,t:t.sconfitta},
+        vittoria_derby: {a:+2,d:+1.5,p:+0.5,t:t.vittoriaDerby},
+        pareggio_derby: {a:+1,d:+1,p:+0.5,t:t.pareggioDerby},
+        sconfitta_derby: {a:-2,d:-1.5,p:-1,t:t.sconfittaDerby}
+    };
+    const regoleCritiche = {
+        vittoria: {a:+1,d:+1,p:+0.5,t:t.vittoria},
+        pareggio: {a:0,d:-1.5,p:+0.5,t:t.pareggio},
+        sconfitta: {a:0,d:-3,p:-1.5,t:t.sconfitta},
+        vittoria_derby: {a:+1.5,d:+2,p:+0.5,t:t.vittoriaDerby},
+        pareggio_derby: {a:0,d:-1,p:-1,t:t.pareggioDerby},
+        sconfitta_derby: {a:0,d:-2,p:-1.5,t:t.sconfittaDerby}
+    };
+    const regole = datiAllenatore.ambiente <= 0 ? regoleCritiche : regoleNormali;
+    const r = regole[tipo];
+    datiAllenatore.ambiente = limita(datiAllenatore.ambiente + r.a);
+    datiAllenatore.dirigenza = limita(datiAllenatore.dirigenza + r.d);
+    datiAllenatore.progetto = limita(datiAllenatore.progetto + r.p);
+    aggiungiStorico(r.t); salvaDati(); disegnaPagina(); controllaEsito();
+}
+
+// ✅ EVENTI SPECIALI
+function applicaEvento(tipo){
+    const t = traduzioni[getLingua()];
+    const ev = {
+        pn_turno: {a:+1,d:+1,p:+0.5,t:t.pnTurno},
+        pn_vittoria: {a:+2,d:+2,p:+1,t:t.pnVittoria},
+        pn_eliminato: {a:-1,d:-1,p:-1,t:t.pnEliminato},
+        pi_turno: {a:+2,d:+1.5,p:+1,t:t.piTurno},
+        pi_vittoria: {a:+10,d:+10,p:+10,t:t.piVittoria},
+        pi_eliminato: {a:-2,d:-1.5,p:-1,t:t.piEliminato},
+        campionato: {a:+5,d:+5,p:+5,t:t.campionato},
+        obiettivo_si: {a:+3,d:+3,p:+1.5,t:t.obiettivoSi},
+        obiettivo_no: {a:-3,d:-3,p:-1.5,t:t.obiettivoNo}
+    }[tipo];
+    datiAllenatore.ambiente = limita(datiAllenatore.ambiente + ev.a);
+    datiAllenatore.dirigenza = limita(datiAllenatore.dirigenza + ev.d);
+    datiAllenatore.progetto = limita(datiAllenatore.progetto + ev.p);
+    aggiungiStorico(ev.t); salvaDati(); disegnaPagina(); controllaEsito();
+}
+
+function limita(v){return Math.max(0,Math.min(10,Math.round(v*10)/10));}
+function aggiungiStorico(testo){storicoPartite.unshift({testo, data:new Date().toLocaleString('it-IT')});}
+function salvaDati(){localStorage.setItem('allenatoreIngaggiato',crittografa(datiAllenatore));localStorage.setItem('storicoPartite',crittografa(storicoPartite));}
+function controllaEsito(){if(datiAllenatore.dirigenza<=0)apriModalePagamento();}
+
+function azzeraStoricoERipristina(){
+    const t=traduzioni[getLingua()];
+    if(confirm(t.confermaReset)){storicoPartite=[];datiAllenatore.ambiente=valoriIniziali.ambiente;datiAllenatore.dirigenza=valoriIniziali.dirigenza;datiAllenatore.progetto=valoriIniziali.progetto;salvaDati();disegnaPagina();}
+}
+
+// ✅ FUNZIONE FINE STAGIONE / ESONERO: SALVA SEMPRE IL FLAG ESONERATO
+function gestisciFineStagione(esonerato = false){
+    const t = traduzioni[getLingua()];
+    const datiSquadra = localStorage.getItem('datiSquadra') ? decrittografa(localStorage.getItem('datiSquadra')) : {};
+    const numeroStagione = datiSquadra.stagione || 1;
+
+    const coppeNazionaliVinte = storicoPartite.filter(x => x.testo.includes(t.pnVittoria)).length;
+    const coppeInternazionaliVinte = storicoPartite.filter(x => x.testo.includes(t.piVittoria)).length;
+    const obiettivoRaggiunto = storicoPartite.some(x => x.testo.includes(t.obiettivoSi)) ? true : 
+                               storicoPartite.some(x => x.testo.includes(t.obiettivoNo)) ? false : null;
+
+    const recordStagionale = {
+        numStagione: numeroStagione,
+        anno: ottieniAnnoStagione(numeroStagione),
+        nomeAllenatore: datiAllenatore.nome || 'N/D',
+        iniziali: {ambiente: valoriIniziali.ambiente, dirigenza: valoriIniziali.dirigenza, progetto: valoriIniziali.progetto},
+        finali: {ambiente: Number(datiAllenatore.ambiente).toFixed(1), dirigenza: Number(datiAllenatore.dirigenza).toFixed(1), progetto: Number(datiAllenatore.progetto).toFixed(1)},
+        campionato: storicoPartite.some(x => x.testo.includes(t.campionato)),
+        coppeNazionali: coppeNazionaliVinte,
+        coppeInternazionali: coppeInternazionaliVinte,
+        obiettivoRaggiunto: obiettivoRaggiunto,
+        esonerato: esonerato // ✅ SALVATAGGIO SICURO
+    };
+
+    let storicoCarriera = localStorage.getItem('storicoCarriera') ? decrittografa(localStorage.getItem('storicoCarriera')) : [];
+    if (!Array.isArray(storicoCarriera)) storicoCarriera = [];
+    storicoCarriera.push(recordStagionale);
+    localStorage.setItem('storicoCarriera', crittografa(storicoCarriera));
+
+    datiSquadra.stagione = numeroStagione + 1;
+    localStorage.setItem('datiSquadra', crittografa(datiSquadra));
+
+    if (esonerato) return; // Se esonerato, non chiedere continuare
+
+    if (confirm(t.stagioneConclusa)) {
+        alert(t.stagioneSalvata);
+        storicoPartite = [];
+        valoriIniziali = {ambiente: Number(datiAllenatore.ambiente), dirigenza: Number(datiAllenatore.dirigenza), progetto: Number(datiAllenatore.progetto)};
+        datiAllenatore._valoriIniziali = valoriIniziali;
+        salvaDati();
+        disegnaPagina();
+    } else {
+        gestisciFineStagione(true); // Chiama se stesso come esonero
+        apriModalePagamento();
+    }
+}
+
+// ✅ MODALE PAGAMENTO: IMPOSTA ESONERO PRIMA ANCHE QUI
+function apriModalePagamento(){
+    importoTotaleDovuto = Number(datiAllenatore.ingaggio)||0; importoPagato=0;
+    document.getElementById('importoIngaggio').textContent=importoTotaleDovuto.toLocaleString('it-IT');
+    document.getElementById('totaleDovuto').textContent=importoTotaleDovuto.toLocaleString('it-IT');
+    aggiornaPagamentoUI(); document.getElementById('modaleEsonero').classList.remove('nascosto');
+    // ✅ Salva subito come esonerato nello storico
+    gestisciFineStagione(true);
+}
+function aggiungiPagamento(){const v=Number(document.getElementById('offertaPagamento').value)||0; importoPagato=Math.min(importoPagato+v,importoTotaleDovuto); aggiornaPagamentoUI(); document.getElementById('offertaPagamento').value='';}
+function aggiornaPagamentoUI(){document.getElementById('totalePagato').textContent=importoPagato.toLocaleString('it-IT'); document.getElementById('btnConfermaPagamento').disabled=(importoPagato<importoTotaleDovuto);}
+function confermaPagamento(){
+    localStorage.removeItem('allenatoreIngaggiato'); localStorage.removeItem('storicoPartite');
+    window.location.href='trattative.html';
+}
+</script>
+</body>
+</html>

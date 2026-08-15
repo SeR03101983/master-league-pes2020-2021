@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MasterLeague">
+<link rel="apple-touch-icon" href="icone/icona-192x192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="titolo">Master Base - Gestione Allenatori</title>
+    <!-- ✅ LIBRERIA CRITTOGRAFIA AGGIUNTA -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; margin: 0; padding: 0; }
+        body { background: #f0f4f8; padding: 20px; max-width: 1200px; margin: auto; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+        .sezione { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .sezione h2 { color: #27ae60; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .riga-dati { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .campo { flex: 1 1 220px; }
+        .campo label { display: block; font-weight: bold; color: #34495e; margin-bottom: 5px; }
+        .campo input, .campo select { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 15px; }
+        .griglia-pulsanti { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        button {  background: #2980b9; padding: 12px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; color: white; }
+        .btn-verde { background: #27ae60; }
+        .btn-verde:hover { background: #219653; }
+        .btn-blu { background: #2980b9; }
+        .btn-blu:hover { background: #1a5276; }
+        .btn-giallo { background: #f39c12; }
+        .btn-giallo:hover { background: #d68910; }
+        .btn-rosso { background: #e74c3c; }
+        .btn-storico {  background: #3498db; color: white; border: none; font-weight: bold; }
+        .btn-storico:hover { background: #2471a3; }
+        .info { background: #eaf2f8; border-left: 4px solid #2980b9; padding: 15px; border-radius: 6px; margin-top: 20px; color: #2c3e50; }
+
+        /* ✅ STILE SELETTORE LINGUA */
+        .barra-superiore { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
+        .contenitore-lingua { position: relative; display: inline-block; }
+        .btn-lingua {
+            background: #34495e; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-lingua:hover { background: #2c3e50; }
+        .menu-lingue {
+            display: none; position: absolute; top: 100%; right: 0; background: white; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px; z-index: 1000; overflow: hidden; margin-top: 4px;
+        }
+        .menu-lingue.visibile { display: block; }
+        .voce-lingua {
+            padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;
+        }
+        .voce-lingua:hover { background: #f0f4f8; }
+        .bandiera { width: 24px; height: 16px; border-radius: 2px; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+<!-- ✅ BARRA CON SELETTORE LINGUA -->
+<div class="barra-superiore">
+    <h1 style="margin: 0;" data-i18n="titoloPrincipale">⚽ Gestione Squadra & Mercato Allenatori</h1>
+
+    <div class="contenitore-lingua">
+        <button class="btn-lingua" onclick="toggleMenuLingue()">
+            <span id="bandieraAttuale">🇮🇹</span>
+            <span data-i18n="scegliLingua">Scegli la lingua</span>
+        </button>
+        <div id="menuLingue" class="menu-lingue">
+            <div class="voce-lingua" onclick="cambiaLingua('it')">
+                <span class="bandiera">🇮🇹</span> Italiano
+            </div>
+            <div class="voce-lingua" onclick="cambiaLingua('en')">
+                <span class="bandiera">🇬🇧</span> English
+            </div>
+            <div class="voce-lingua" onclick="cambiaLingua('pt')">
+                <span class="bandiera">🇧🇷</span> Português
+            </div>
+            <div class="voce-lingua" onclick="cambiaLingua('es')">
+                <span class="bandiera">🇪🇸</span> Español
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sezione">
+    <h2 data-i18n="datiSquadra">📋 Dati della Tua Squadra</h2>
+    <div class="riga-dati">
+        <div class="campo">
+            <label data-i18n="nomeSquadra">Nome Squadra:</label>
+            <input type="text" id="nomeSquadra" data-i18n-placeholder="esNomeSquadra" placeholder="Es. Juventus">
+        </div>
+        <div class="campo">
+            <label data-i18n="rankingSquadra">Ranking Squadra:</label>
+            <input type="text" id="rankingSquadra" data-i18n-placeholder="esRanking" placeholder="Es. Top 10 / Serie A">
+        </div>
+        <div class="campo">
+            <label data-i18n="forzaGenerale">Forza Generale:</label>
+            <input type="number" id="forzaSquadra" step="0.5" min="1" max="5" value="3">
+        </div>
+        <div class="campo">
+            <label data-i18n="budget">Budget Disponibile (€):</label>
+            <input type="number" id="budgetSquadra" min="0" value="10000000">
+        </div>
+        <div class="campo">
+            <label data-i18n="obiettivo">Obiettivo Stagionale:</label>
+            <input type="text" id="obiettivoSquadra" data-i18n-placeholder="esObiettivo" placeholder="Es. Salvezza / Scudetto">
+        </div>
+    </div>
+    <button class="btn-verde" onclick="salvaDatiSquadra()" data-i18n="salvaDati">💾 Salva Dati Squadra</button>
+</div>
+
+<div class="barra-comandi" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+    <button onclick="window.location.href='lista-allenatori.html'" data-i18n="listaAllenatori">📋 Lista Allenatori</button>
+    <button onclick="window.location.href='trattative.html'" data-i18n="trattative">🤝 Trattative</button>
+    <button class="btn-storico" onclick="window.location.href='storico.html'" data-i18n="storico">📜 Storico Carriera</button>
+    <button class="btn-verde" onclick="window.location.href='master-base.html'" data-i18n="nuovoInizio">🔄 Ricomincia Master League</button>
+</div>
+
+<div class="info">
+ℹ️ <strong data-i18n="infoTitolo">Informazioni:</strong> <span data-i18n="infoTesto">Questa è la pagina principale. Da qui accedi a tutte le sezioni del sistema di gestione. I dati della squadra vengono condivisi in tutte le pagine.</span>
+</div>
+
+<script>
+// ✅ PASSWORD MASTER E FUNZIONI DI CRITTOGRAFIA
+const PASSWORD_MASTER = "LaTuaPasswordSegreta123";
+
+function crittografa(dati) {
+    return CryptoJS.AES.encrypt(JSON.stringify(dati), PASSWORD_MASTER).toString();
+}
+
+function decrittografa(stringaCritta) {
+    if (!stringaCritta || typeof stringaCritta !== 'string' || stringaCritta.trim() === '') {
+        return null;
+    }
+    try {
+        const bytes = CryptoJS.AES.decrypt(stringaCritta, PASSWORD_MASTER);
+        return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    } catch {
+        console.warn("Dati non validi o corrotti");
+        return null;
+    }
+}
+
+// ✅ DIZIONARIO MULTILINGUA
+const traduzioni = {
+    it: {
+        titolo: "Master Base - Gestione Allenatori",
+        titoloPrincipale: "⚽ Gestione Squadra & Mercato Allenatori",
+        scegliLingua: "Scegli la lingua",
+        datiSquadra: "📋 Dati della Tua Squadra",
+        nomeSquadra: "Nome Squadra:",
+        esNomeSquadra: "Es. Juventus",
+        rankingSquadra: "Ranking Squadra:",
+        esRanking: "Es. Top 10 / Serie A",
+        forzaGenerale: "Forza Generale:",
+        budget: "Budget Disponibile (€):",
+        obiettivo: "Obiettivo Stagionale:",
+        esObiettivo: "Es. Salvezza / Scudetto",
+        salvaDati: "💾 Salva Dati Squadra",
+        listaAllenatori: "📋 Lista Allenatori",
+        aggiungiAllenatore: "➕ Aggiungi Allenatore",
+        trattative: "🤝 Trattative",
+        storico: "📜 Storico Carriera",
+        nuovoInizio: "🔄 Ricomincia Master League",
+        infoTitolo: "Informazioni:",
+        infoTesto: "Questa è la pagina principale. Da qui accedi a tutte le sezioni del sistema di gestione. I dati della squadra vengono condivisi in tutte le pagine."
+    },
+    en: {
+        titolo: "Master Base - Manager",
+        titoloPrincipale: "⚽ Team & Coaches Management",
+        scegliLingua: "Choose Language",
+        datiSquadra: "📋 Team Data",
+        nomeSquadra: "Team Name:",
+        esNomeSquadra: "Ex: Juventus",
+        rankingSquadra: "Team Ranking:",
+        esRanking: "Ex: Top 10 / League A",
+        forzaGenerale: "Team Strength:",
+        budget: "Available Budget (€):",
+        obiettivo: "Season Goal:",
+        esObiettivo: "Ex: Survival / Title",
+        salvaDati: "💾 Save Team Data",
+        listaAllenatori: "📋 Coaches List",
+        aggiungiAllenatore: "➕ Add Coach",
+        trattative: "🤝 Negotiations",
+        storico: "📜 Career History",
+        nuovoInizio: "🔄 Restart Master League",
+        infoTitolo: "Information:",
+        infoTesto: "This is the main page. Access all sections of the management system from here. Team data is shared across all pages."
+    },
+    pt: {
+        titolo: "Base Master - Gestão",
+        titoloPrincipale: "⚽ Gestão Equipe & Mercado Treinadores",
+        scegliLingua: "Escolher Idioma",
+        datiSquadra: "📋 Dados da Equipe",
+        nomeSquadra: "Nome da Equipe:",
+        esNomeSquadra: "Ex: Juventus",
+        rankingSquadra: "Classificação:",
+        esRanking: "Ex: Top 10 / Série A",
+        forzaGenerale: "Força Geral:",
+        budget: "Orçamento Disponível (€):",
+        obiettivo: "Objetivo da Temporada:",
+        esObiettivo: "Ex: Permanência / Título",
+        salvaDati: "💾 Salvar Dados",
+        listaAllenatori: "📋 Lista Treinadores",
+        aggiungiAllenatore: "➕ Adicionar Treinador",
+        trattative: "🤝 Negociações",
+        storico: "📜 Histórico Carreira",
+        nuovoInizio: "🔄 Reiniciar Master League",
+        infoTitolo: "Informações:",
+        infoTesto: "Esta é a página principal. Acesse todas as seções do sistema de gestão aqui. Os dados da equipe são compartilhados em todas as páginas."
+    },
+    es: {
+        titolo: "Base Master - Gestión",
+        titoloPrincipale: "⚽ Gestión Equipo & Mercado Entrenadores",
+        scegliLingua: "Elegir Idioma",
+        datiSquadra: "📋 Datos del Equipo",
+        nomeSquadra: "Nombre del Equipo:",
+        esNomeSquadra: "Ej: Juventus",
+        rankingSquadra: "Ranking del Equipo:",
+        esRanking: "Ej: Top 10 / Serie A",
+        forzaGenerale: "Fuerza General:",
+        budget: "Presupuesto Disponible (€):",
+        obiettivo: "Objetivo Temporada:",
+        esObiettivo: "Ej: Permanencia / Título",
+        salvaDati: "💾 Guardar Datos",
+        listaAllenatori: "📋 Lista Entrenadores",
+        aggiungiAllenatore: "➕ Añadir Entrenador",
+        trattative: "🤝 Negociaciones",
+        storico: "📜 Historial Carrera",
+        nuovoInizio: "🔄 Reiniciar Master League",
+        infoTitolo: "Información:",
+        infoTesto: "Esta es la página principal. Accede a todas las secciones del sistema de gestión desde aquí. Los datos del equipo se comparten en todas las páginas."
+    }
+};
+
+// ✅ GESTIONE LINGUA CENTRALIZZATA
+function getLingua() { return localStorage.getItem('linguaScelta') || 'it'; }
+function setLingua(l) { localStorage.setItem('linguaScelta', l); }
+
+function aggiornaInterfacciaLingua() {
+    const l = getLingua();
+    const t = traduzioni[l];
+    document.documentElement.lang = l;
+    document.getElementById('bandieraAttuale').textContent = l === 'it' ? '🇮🇹' : l === 'en' ? '🇬🇧' : l === 'pt' ? '🇧🇷' : '🇪🇸';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const chiave = el.getAttribute('data-i18n');
+        if (t[chiave]) el.textContent = t[chiave];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const chiave = el.getAttribute('data-i18n-placeholder');
+        if (t[chiave]) el.placeholder = t[chiave];
+    });
+}
+
+function toggleMenuLingue() { document.getElementById('menuLingue').classList.toggle('visibile'); }
+
+function cambiaLingua(nuovaLingua) {
+    setLingua(nuovaLingua);
+    aggiornaInterfacciaLingua();
+    toggleMenuLingue();
+}
+
+// ✅ CHIUDE MENU CLICCANDO FUORI
+document.addEventListener('click', e => {
+    if (!e.target.closest('.contenitore-lingua')) document.getElementById('menuLingue').classList.remove('visibile');
+});
+
+// ✅ FUNZIONI DATI SQUADRA
+function salvaDatiSquadra() {
+    const dati = {
+        nome: document.getElementById('nomeSquadra').value.trim(),
+        ranking: document.getElementById('rankingSquadra').value.trim(),
+        forza: parseFloat(document.getElementById('forzaSquadra').value) || 3,
+        budget: parseInt(document.getElementById('budgetSquadra').value) || 0,
+        obiettivo: document.getElementById('obiettivoSquadra').value.trim(),
+        allenatoreAttuale: "Nessuno",
+        ultimoAgg: new Date().toLocaleString()
+    };
+    localStorage.setItem('datiSquadra', crittografa(dati));
+    const l = getLingua();
+    alert(l === 'it' ? '✅ Dati Squadra Salvati!' : l === 'en' ? '✅ Team Data Saved!' : l === 'pt' ? '✅ Dados Salvos!' : '✅ ¡Datos Guardados!');
+}
+
+window.onload = function() {
+    aggiornaInterfacciaLingua(); // ✅ TRADUCE SUBITO ALL'APERTURA
+    const salvati = localStorage.getItem('datiSquadra');
+    if (salvati) {
+        const d = decrittografa(salvati);
+        if(d) {
+            document.getElementById('nomeSquadra').value = d.nome || '';
+            document.getElementById('rankingSquadra').value = d.ranking || '';
+            document.getElementById('forzaSquadra').value = d.forza || 3;
+            document.getElementById('budgetSquadra').value = d.budget || 0;
+            document.getElementById('obiettivoSquadra').value = d.obiettivo || '';
+        }
+    }
+};
+</script>
+</body>
